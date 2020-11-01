@@ -1,0 +1,127 @@
+--  Abstract :
+--
+--  Dummy unit that 'withs' all SAL units except Text_IO children (see
+--  all_sal_text_io.adb), so the compiler will compile them all.
+--
+--  Listed in alphabetical order.
+pragma Warnings (Off); -- all are unreferenced.
+with SAL.Aux.Definite_Private_Items;
+with SAL.Aux.Definite_Private_Items;
+with SAL.Aux.Enum_Iterators;
+with SAL.Aux.Indefinite_Limited_Items;
+with SAL.Aux.Indefinite_Private_Items.Comparable;
+with SAL.Aux.Indefinite_Private_Items;
+with SAL.Aux.Sort_Indefinite_Items_Definite_Keys;
+with SAL.Aux;
+with SAL.Config_Files.Boolean;
+with SAL.Config_Files.Duration;
+with SAL.Config_Files.Integer;
+with SAL.Config_Files.Time;
+with SAL.Config_Files;
+with SAL.Endianness;
+with SAL.Gen.Alg.Count;
+with SAL.Gen.Alg.Find_Binary;
+with SAL.Gen.Alg.Find_Linear;
+with SAL.Gen.Alg.Find_Linear.Sorted;
+with SAL.Gen.Alg.Process_All_Constant;
+with SAL.Gen.Alg;
+with SAL.Gen.Gray_Code;
+with SAL.Gen.Lists.Double.Iterators;
+with SAL.Gen.Lists.Double;
+with SAL.Gen.Lists;
+with SAL.Gen.Stacks.Bounded_Limited;
+with SAL.Gen.Stacks.Bounded_Nonlimited;
+with SAL.Gen.Stacks;
+with SAL.Gen.Word_Order_Convert.Scalar_32;
+with SAL.Gen.Word_Order_Convert.Scalar_64;
+with SAL.Gen.Word_Order_Convert;
+with SAL.Gen;
+with SAL.Gen_Array_Image;
+with SAL.Gen_Array_Text_IO;
+with SAL.Gen_FIFO;
+with SAL.Gen_Math.Gen_Den_Hart;
+with SAL.Gen_Math.Gen_DOF_2;
+with SAL.Gen_Math.Gen_DOF_3.Gen_Image;
+with SAL.Gen_Math.Gen_DOF_3;
+with SAL.Gen_Math.Gen_DOF_6.Gen_Image;
+with SAL.Gen_Math.Gen_DOF_6.Gen_Integrator_Utils;
+with SAL.Gen_Math.Gen_DOF_6;
+with SAL.Gen_Math.Gen_Inverse_Array;
+with SAL.Gen_Math.Gen_Manipulator;
+with SAL.Gen_Math.Gen_Runge_Kutta_4th;
+with SAL.Gen_Math.Gen_Scalar;
+with SAL.Gen_Math.Gen_Square_Array.Gen_Inverse;
+with SAL.Gen_Math.Gen_Square_Array;
+with SAL.Gen_Math.Gen_Vector.Gen_Image;
+with SAL.Gen_Math.Gen_Vector;
+with SAL.Gen_Math;
+with SAL.Generic_Binary_Image;
+with SAL.Generic_Decimal_Image;
+with SAL.Generic_Float_Image;
+with SAL.Generic_Hex_Image;
+with SAL.Math_Double.Den_Hart;
+with SAL.Math_Double.DOF_2;
+with SAL.Math_Double.DOF_3.Cacv_Inverse;
+with SAL.Math_Double.DOF_3.Image;
+with SAL.Math_Double.DOF_3;
+with SAL.Math_Double.DOF_6.Image;
+with SAL.Math_Double.DOF_6.DC_Array_DCV_Inverse;
+with SAL.Math_Double.DOF_6.Integrator_Utils;
+with SAL.Math_Double.DOF_6;
+with SAL.Math_Double.Elementary;
+with SAL.Math_Double.Scalar;
+with SAL.Math_Double.Text_IO;
+with SAL.Math_Double;
+with SAL.Math_Float.Den_Hart;
+with SAL.Math_Float.DOF_2;
+with SAL.Math_Float.DOF_3.Cacv_Inverse;
+with SAL.Math_Float.DOF_3.Image;
+with SAL.Math_Float.DOF_3;
+with SAL.Math_Float.DOF_6.DC_Array_DCV_Inverse;
+with SAL.Math_Float.DOF_6.Integrator_Utils;
+with SAL.Math_Float.DOF_6;
+with SAL.Math_Float.Elementary;
+with SAL.Math_Float.Polynomials;
+with SAL.Math_Float.Scalar;
+with SAL.Math_Float.Text_IO;
+with SAL.Math_Float;
+with SAL.Math_Float_Kraft_HC_Nominal;
+with SAL.Math_Float_Manipulator_6;
+with SAL.Math_Float_Manipulator_7;
+with SAL.Math_Float_RRC_K1607_Nominal;
+with SAL.Memory_Streams.Address;
+with SAL.Memory_Streams.Bounded;
+with SAL.Memory_Streams;
+with SAL.Poly.Alg.Count;
+with SAL.Poly.Alg.Find_Linear;
+with SAL.Poly.Alg.Process_All_Constant;
+with SAL.Poly.Alg;
+with SAL.Poly.Binary_Trees.Sorted.Iterators;
+with SAL.Poly.Binary_Trees.Sorted;
+with SAL.Poly.Binary_Trees;
+with SAL.Poly.Function_Tables.Monotonic.First_Order;
+with SAL.Poly.Function_Tables.Monotonic;
+with SAL.Poly.Function_Tables;
+with SAL.Poly.Lists.Double;
+with SAL.Poly.Lists.Single.Iterators;
+with SAL.Poly.Lists.Single;
+with SAL.Poly.Lists;
+with SAL.Poly.Stacks.Unbounded_Array;
+with SAL.Poly.Stacks;
+with SAL.Poly.Unbounded_Arrays;
+with SAL.Poly;
+with SAL.Simple.Function_Tables.Monotonic.First_Order;
+with SAL.Simple.Function_Tables.Monotonic;
+with SAL.Simple.Function_Tables;
+with SAL.Simple.Searches.Binary;
+with SAL.Simple.Searches;
+with SAL.Simple;
+with SAL.Time_Conversions;
+with SAL;
+pragma Warnings (On);
+
+procedure All_SAL
+is
+begin
+   null;
+end All_SAL;

@@ -1,0 +1,88 @@
+with "standard_common";
+project Sal_Release_Test is
+  for Source_Dirs use
+    ("../../Source_Common",
+     "../../Source_Common/Test",
+     "../../aunit/Framework",
+     "../../aunit/Text_Reporter");
+
+  package Naming is
+     for Specification ("SAL.Endianness") use "sal-endianness_gnat_x86.ads";
+  end Naming;
+
+  package Compiler is
+     for Default_Switches ("Ada") use
+       Standard_Common.Compiler.Release_Switches &
+       Standard_Common.Compiler.Style_Checks;
+
+     --  These files have output from debug_* text_io, which does not
+     --  follow the gnat spacing style.
+     for Switches ("test_math_float_manipulator_6.adb") use
+       Standard_Common.Compiler.Release_Switches &
+       Standard_Common.Compiler.Non_Spacing_Style_Checks;
+
+     for Switches ("test_math_float_manipulator_7.adb") use
+       Standard_Common.Compiler.Release_Switches &
+       Standard_Common.Compiler.Non_Spacing_Style_Checks;
+  end Compiler;
+
+  package Binder is
+     for Default_Switches ("Ada") use Standard_Common.Binder'Default_Switches ("Ada");
+  end Binder;
+
+  package Builder is
+     --  WORKAROUND: GNAT 5.01a has a better way to do this, but we're
+     --  stuck with 3.16a1 on Lynx, so we use this for a while.
+     for Executable ("test_all_harness.adb") use "test_all_harness.exe";
+     for Executable ("test_gen_alg_find_binary_integer_arrays.adb") use "test_gen_alg_find_binary_integer_arrays.exe";
+     for Executable ("test_gen_alg_find_binary_puppet_arrays.adb") use "test_gen_alg_find_binary_puppet_arrays.exe";
+     for Executable ("test_gen_alg_find_binary_symbol_arrays.adb") use "test_gen_alg_find_binary_symbol_arrays.exe";
+     for Executable ("test_gen_alg_find_linear_integer_lists.adb") use "test_gen_alg_find_linear_integer_lists.exe";
+     for Executable ("test_gen_alg_find_linear_puppet_lists.adb") use "test_gen_alg_find_linear_puppet_lists.exe";
+     for Executable ("test_gen_alg_find_linear_symbol_lists.adb") use "test_gen_alg_find_linear_symbol_lists.exe";
+     for Executable ("test_gen_alg_find_linear_integer_lists_sorted.adb") use "test_gen_alg_find_linear_integer_lists_sorted.exe";
+     for Executable ("test_gen_alg_find_linear_puppet_lists_sorted.adb") use "test_gen_alg_find_linear_puppet_lists_sorted.exe";
+     for Executable ("test_gen_alg_find_linear_symbol_lists_sorted.adb") use "test_gen_alg_find_linear_symbol_lists_sorted.exe";
+     for Executable ("test_gen_array_image.adb") use "test_gen_array_image.exe";
+     for Executable ("test_gen_fifo.adb") use "test_gen_fifo.exe";
+     for Executable ("test_gen_images.adb") use "test_gen_images.exe";
+     for Executable ("test_gen_lists_double.adb") use "test_gen_lists_double.exe";
+     for Executable ("test_gen_stacks_bounded.adb") use "test_gen_stacks_bounded.exe";
+     for Executable ("test_gen_word_order_convert.adb") use "test_gen_word_order_convert.exe";
+     for Executable ("test_gray_code.adb") use "test_gray_code.exe";
+     for Executable ("test_memory_streams_address.adb") use "test_memory_streams_address.exe";
+     for Executable ("test_memory_streams_bounded.adb") use "test_memory_streams_bounded.exe";
+     for Executable ("test_poly_alg_find_linear.adb") use "test_poly_alg_find_linear.exe";
+     for Executable ("test_poly_binary_trees_sorted.adb") use "test_poly_binary_trees_sorted.exe";
+     for Executable ("test_poly_function_tables_monotonic_first_order.adb") use "test_poly_function_tables_monotonic_first_order.exe";
+     for Executable ("test_poly_lists_double.adb") use "test_poly_lists_double.exe";
+     for Executable ("test_poly_lists_single.adb") use "test_poly_lists_single.exe";
+     for Executable ("test_poly_stacks_unbounded_array.adb") use "test_poly_stacks_unbounded_array.exe";
+     for Executable ("test_poly_unbounded_arrays.adb") use "test_poly_unbounded_arrays.exe";
+     for Executable ("test_simple_function_tables_monotonic_first_order.adb") use "test_simple_function_tables_monotonic_first_order.exe";
+     for Executable ("test_time_conversions.adb") use "test_time_conversions.exe";
+
+     for Executable ("test_gen_math_gen_dof_3_gen_image.adb") use "test_gen_math_gen_dof_3_gen_image.exe";
+     for Executable ("test_gen_math_gen_square_array.adb") use "test_gen_math_gen_square_array.exe";
+     for Executable ("test_gen_math_gen_vector.adb") use "test_gen_math_gen_vector.exe";
+     for Executable ("test_math_double_dof_2.adb") use "test_math_double_dof_2.exe";
+     for Executable ("test_math_double_dof_6.adb") use "test_math_double_dof_6.exe";
+     for Executable ("test_math_double_scalar.adb") use "test_math_double_scalar.exe";
+     for Executable ("test_math_float_dof_2.adb") use "test_math_float_dof_2.exe";
+     for Executable ("test_math_float_dof_6_integrator_utils.adb") use "test_math_float_dof_6_integrator_utils.exe";
+     for Executable ("test_math_float_dof_6.adb") use "test_math_float_dof_6.exe";
+     for Executable ("test_math_float_inverse_array.adb") use "test_math_float_inverse_array.exe";
+     for Executable ("test_math_float_scalar.adb") use "test_math_float_scalar.exe";
+
+     for Executable ("debug_math_double_runge_kutta_4th.adb") use "debug_math_double_runge_kutta_4th.exe";
+     for Executable ("debug_math_float_gen_runge_kutta_4th.adb") use "debug_math_float_gen_runge_kutta_4th.exe";
+     for Executable ("debug_math_float_manipulator_6.adb") use "debug_math_float_manipulator_6.exe";
+     for Executable ("debug_math_float_manipulator_7.adb") use "debug_math_float_manipulator_7.exe";
+
+     for Executable ("time_inverse_inertia.adb") use "time_inverse_inertia.exe";
+     for Executable ("time_math_float_den_hart.adb") use "time_math_float_den_hart.exe";
+     for Executable ("time_poly_function_tables_monotonic_first_order.adb") use "time_poly_function_tables_monotonic_first_order.exe";
+     for Executable ("time_simple_function_tables_monotonic_first_order.adb") use "time_simple_function_tables_monotonic_first_order.exe";
+  end Builder;
+
+end Sal_Release_Test;

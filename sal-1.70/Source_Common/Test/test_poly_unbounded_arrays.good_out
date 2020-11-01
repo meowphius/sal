@@ -1,0 +1,133 @@
+Creating Append null array
+Growth => APPEND, Initial_Space =>  0, Max_Space =>  0
+First, Last           =>  10,  9
+Base'First, Base'Last =>  10,  9
+Length =>  0
+Items => 
+
+Testing for Constraint_Errors
+ok, got Constraint_Error
+ok, got Constraint_Error
+ok, got Constraint_Error
+ok, got Constraint_Error
+Adding First, Last
+ok, got Constraint_Error
+Growth => APPEND, Initial_Space =>  0, Max_Space =>  1
+First, Last           =>  10,  10
+Base'First, Base'Last =>  10,  10
+Length =>  1
+Items =>  101 
+
+Set_Grow
+ok, got Constraint_Error
+Growth => APPEND, Initial_Space =>  0, Max_Space =>  2
+First, Last           =>  10,  11
+Base'First, Base'Last =>  10,  11
+Length =>  2
+Items =>  101  102 
+
+Delete first, last
+
+Growth => APPEND, Initial_Space =>  0, Max_Space =>  2
+First, Last           =>  11,  11
+Base'First, Base'Last =>  10,  11
+Length =>  1
+Items =>  102 
+
+
+Growth => APPEND, Initial_Space =>  0, Max_Space =>  2
+First, Last           =>  11,  10
+Base'First, Base'Last =>  10,  10
+Length =>  0
+Items => 
+
+
+
+Creating Prepend null array
+Growth => PREPEND, Initial_Space =>  0, Max_Space =>  0
+First, Last           =>  11,  10
+Base'First, Base'Last =>  11,  10
+Length =>  0
+Items => 
+
+Adding First, Last
+ok, got Constraint_Error
+Growth => PREPEND, Initial_Space =>  0, Max_Space =>  1
+First, Last           =>  10,  10
+Base'First, Base'Last =>  10,  10
+Length =>  1
+Items => -101 
+
+Set_Grow
+ok, got Constraint_Error
+Growth => PREPEND, Initial_Space =>  0, Max_Space =>  4
+First, Last           =>  8,  10
+Base'First, Base'Last =>  7,  10
+Length =>  3
+Items => -103 -102 -101 
+
+add enough to grow, then delete enough to shrink
+Growth => PREPEND, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  0,  10
+Base'First, Base'Last => -5,  10
+Length =>  11
+Items => -111 -110 -109 -108 -107 -106 -105 -104 -103 -102 -101 
+
+
+Growth => PREPEND, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  10,  10
+Base'First, Base'Last =>  7,  10
+Length =>  1
+Items => -101 
+
+
+
+Creating Both null array
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  0
+First, Last           =>  10,  9
+Base'First, Base'Last =>  10,  9
+Length =>  0
+Items => 
+
+Adding First, Last
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  2
+First, Last           =>  9,  10
+Base'First, Base'Last =>  9,  10
+Length =>  2
+Items => -101  101 
+
+Set_Grow
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  8
+First, Last           =>  8,  11
+Base'First, Base'Last =>  7,  14
+Length =>  4
+Items => -102 -101  101  102 
+
+set prepend, then delete last
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  0,  11
+Base'First, Base'Last => -1,  14
+Length =>  12
+Items => -110 -109 -108 -107 -106 -105 -104 -103 -102 -101  101  102 
+
+
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  0,  1
+Base'First, Base'Last => -1,  6
+Length =>  2
+Items => -110 -109 
+
+add last, then delete first
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  0,  11
+Base'First, Base'Last => -1,  14
+Length =>  12
+Items => -110 -109 -108 -107 -106 -105 -104 -103 -102 -101 -100 -99 
+
+
+Growth => BOTH, Initial_Space =>  0, Max_Space =>  16
+First, Last           =>  10,  11
+Base'First, Base'Last =>  7,  14
+Length =>  2
+Items => -100 -99 
+

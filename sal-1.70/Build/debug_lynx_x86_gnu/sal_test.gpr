@@ -1,0 +1,38 @@
+--  For running SAL tests; includes Test directory
+with "standard_common";
+with "sal";
+project Sal_Test is
+
+  for Source_Dirs use
+    ("../../Source_Common/Test");
+
+  for Main use ("test_all_harness");
+
+  package Compiler is
+     for Default_Switches ("Ada") use
+       Standard_Common.Compiler'Default_Switches ("Ada") &
+       Standard_Common.Compiler.Debug_Switches &
+       Standard_Common.Compiler.Style_Checks;
+
+     --  These files have output from debug_* text_io, which does not
+     --  follow the gnat spacing style.
+     for Switches ("test_math_float_manipulator_6.adb") use
+       Standard_Common.Compiler'Default_Switches ("Ada") &
+       Standard_Common.Compiler.Debug_Switches &
+       Standard_Common.Compiler.Non_Spacing_Style_Checks;
+
+     for Switches ("test_math_float_manipulator_7.adb") use
+       Standard_Common.Compiler'Default_Switches ("Ada") &
+       Standard_Common.Compiler.Debug_Switches &
+       Standard_Common.Compiler.Non_Spacing_Style_Checks;
+  end Compiler;
+
+  package Binder is
+     for Default_Switches ("Ada") use Standard_Common.Binder'Default_Switches ("Ada");
+  end Binder;
+
+  package Builder is
+     for Executable_Suffix use ".exe";
+  end Builder;
+
+end Sal_Test;

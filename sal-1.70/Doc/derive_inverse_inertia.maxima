@@ -1,0 +1,14 @@
+/* derive fast inverse inertia for sal.gen_math.gen_dof_3 */
+
+/* Since Inertia is a symmetric matrix, there is a
+   faster inverse than gen_square_array.gen_inverse */
+   
+inertia : matrix([ixx, ixy, ixz], [ixy, iyy, iyz], [ixz, iyz, izz]);
+
+invinertia : invert (inertia);
+
+optinv1 : optimize (invinertia);
+
+optinv2 : optimize (expand (invinertia));
+
+/* end of file */

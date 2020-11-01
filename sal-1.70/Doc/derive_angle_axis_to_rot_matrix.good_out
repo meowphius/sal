@@ -1,0 +1,67 @@
+GCL (GNU Common Lisp)  Version(2.5.0) Thu Jan 30 02:37:51 CST 2003
+Licensed under GNU Library General Public License
+Contains Enhancements by W. Schelter
+
+Use (help) to get some basic information on how to use GCL.
+Maxima 5.9.0 http://maxima.sourceforge.net
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+This is a development version of Maxima. The function bug_report()
+provides bug reporting information.
+(C1) 		 BATCH(derive_angle_axis_to_rot_matrix.maxima)
+
+batching #pc:/Projects/GDS/sal/main/Doc/derive_angle_axis_to_rot_matrix.maxima
+(C2) 				  LINEL : 120
+(C3) 			   FILE_SEARCH_MAXIMA : APPEND([./###.{maxima}], FILE_SEARCH_MAXIMA)
+(C4) 						    BATCH(math_util)
+
+batching #pc:/Projects/GDS/sal/main/Doc/math_util.maxima
+(C5) 			      cross(a, b) := [a  b  - a  b , a  b  - a  b , a  b  - a  b ]
+					       2  3    3  2   3	 1    1	 3   1  2    2  1
+(D6) 						   ./math_util.maxima
+(C6) 						  r : [r_x, r_y, r_z]
+(C7) 						  n : [n_x, n_y, n_z]
+(C8) 		 vect_rot : EXPAND(n (r . n) (1 - COS(THETA)) - cross(r, n) SIN(THETA) + r COS(THETA))
+												     2
+(D8) [n_y r_z SIN(THETA) - n_z r_y SIN(THETA) - n_x n_z r_z COS(THETA) - n_x n_y r_y COS(THETA) - n_x  r_x COS(THETA)
+
+						   2
+ + r_x COS(THETA) + n_x n_z r_z + n_x n_y r_y + n_x  r_x, - n_x r_z SIN(THETA) + n_z r_x SIN(THETA)
+
+			       2									     2
+ - n_y n_z r_z COS(THETA) - n_y  r_y COS(THETA) + r_y COS(THETA) - n_x n_y r_x COS(THETA) + n_y n_z r_z + n_y  r_y
+
+							     2
+ + n_x n_y r_x, n_x r_y SIN(THETA) - n_y r_x SIN(THETA) - n_z  r_z COS(THETA) + r_z COS(THETA) - n_y n_z r_y COS(THETA)
+
+			       2
+ - n_x n_z r_x COS(THETA) + n_z  r_z + n_y n_z r_y + n_x n_z r_x]
+(C9) 					   M_x : EXPAND(COEFF(vect_rot, r_x))
+	   2				  2
+(D9) [- n_x  COS(THETA) + COS(THETA) + n_x , n_z SIN(THETA) - n_x n_y COS(THETA) + n_x n_y, 
+
+									- n_y SIN(THETA) - n_x n_z COS(THETA) + n_x n_z]
+(C10) 					   M_y : EXPAND(COEFF(vect_rot, r_y))
+							     2				    2
+(D10) [- n_z SIN(THETA) - n_x n_y COS(THETA) + n_x n_y, - n_y  COS(THETA) + COS(THETA) + n_y , 
+
+									  n_x SIN(THETA) - n_y n_z COS(THETA) + n_y n_z]
+(C11) 					   M_z : EXPAND(COEFF(vect_rot, r_z))
+(D11) [n_y SIN(THETA) - n_x n_z COS(THETA) + n_x n_z, - n_x SIN(THETA) - n_y n_z COS(THETA) + n_y n_z, 
+
+										       2			      2
+										  - n_z  COS(THETA) + COS(THETA) + n_z ]
+(C12) 					     vers(THETA) := 1 - COS(THETA)
+		      2
+(C13) M : EXPAND([[n_x  vers(THETA) + COS(THETA), n_x n_y vers(THETA) + n_z SIN(THETA), 
+
+										 2
+n_x n_z vers(THETA) - n_y SIN(THETA)], [n_x n_y vers(THETA) - n_z SIN(THETA), n_y  vers(THETA) + COS(THETA), 
+
+n_y n_z vers(THETA) + n_x SIN(THETA)], [n_x n_z vers(THETA) + n_y SIN(THETA), n_y n_z vers(THETA) - n_x SIN(THETA), 
+
+   2
+n_z  vers(THETA) + COS(THETA)]])
+(C14) 					        IS([M_x, M_y, M_z] = M)
+(D14) 							  TRUE
+(D15) 					 derive_angle_axis_to_rot_matrix.maxima

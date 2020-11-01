@@ -1,0 +1,31 @@
+/* Derivations for spacecraft_math.tex: eqn:angle_axis_to_rot_mat */
+linel : 120$
+FILE_SEARCH_MAXIMA : append (["./###.{maxima}"], FILE_SEARCH_MAXIMA)$
+
+batch ("math_util");
+
+r : [r_x, r_y, r_z]$
+n : [n_x, n_y, n_z]$
+
+/* eqn:angle_axis_active */
+vect_rot : expand (r * cos (theta) - cross (r, n) * sin (theta) + n * r . n * (1 - cos (theta)));
+
+M_x : expand (coeff (vect_rot, r_x));
+M_y : expand (coeff (vect_rot, r_y));
+M_z : expand (coeff (vect_rot, r_z));
+
+/* eqn:angle_axis_to_rot_mat */
+vers (theta) := 1 - cos(theta)$
+M : expand (
+[[cos (theta) + n_x^2 * vers (theta),
+  n_z * sin (theta) + n_x * n_y * vers (theta),
+  - n_y * sin (theta) + n_x * n_z * vers (theta)],
+ [- n_z * sin (theta) + n_x * n_y * vers (theta),
+  cos (theta) + n_y^2 * vers (theta),
+  n_x * sin (theta) + n_y * n_z * vers (theta)],
+ [n_y * sin (theta) + n_x * n_z * vers (theta),
+  - n_x * sin (theta) + n_y * n_z * vers (theta),
+  cos (theta) + n_z^2 * vers (theta)]])$
+
+is ([M_x, M_y, M_z] = M);
+/* end of file */

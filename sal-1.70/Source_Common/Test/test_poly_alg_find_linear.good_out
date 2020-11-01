@@ -1,0 +1,34 @@
+Testing Sal.Poly.Algs.Find_Linear
+Definite non-tagged non-limited items (integer_lists)
+List (Count =>  3) => 
+(Item =>  1,
+ Item =>  3,
+ Item =>  5)
+Finding
+5 =>  5
+3 =>  3
+ok, didn't find 0
+
+Indefinite tagged non-limited items (symbols)
+List (Count =>  2)
+(Item => Significant_Digits => 5,
+ Item => First =>-4 Last => 4)
+Finding exact symbols
+Float_5    => Item => Significant_Digits => 5
+Discrete_4 => Item => First =>-4 Last => 4
+ok, didn't find Float_0
+Finding types
+Float    => Item => Significant_Digits => 5
+Discrete => Item => First =>-4 Last => 4
+
+Indefinite tagged limited items (puppets)
+List (Count =>  2)
+(Item => MUPPET 2 5,
+ Item => BEANIE 4)
+Finding exact Puppets
+Muppet_2_5 => Item => MUPPET 2 5
+Beanie_4   => Item => BEANIE 4
+ok, didn't find Beanie_0
+Finding types
+Muppet => Item => MUPPET 2 5
+Beanie => Item => BEANIE 4

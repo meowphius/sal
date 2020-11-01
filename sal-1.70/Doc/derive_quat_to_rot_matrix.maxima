@@ -1,0 +1,29 @@
+/* Derivations for spacecraft_math.tex: eqn:quat_to_rot_matrix */
+linel : 120$
+FILE_SEARCH_MAXIMA : append (["./###.{maxima}"], FILE_SEARCH_MAXIMA)$
+
+batch ("math_util");
+
+/* eqn:quat_times_vect */
+a : [Q_y * r_z - Q_z * r_y, Q_z * r_x - Q_x * r_z, Q_x * r_y - Q_y * r_x]$
+r_rotated : expand
+  ([r_x + 2 * (Q_s * a[1] + Q_y * a[3] - Q_z * a[2]),
+    r_y + 2 * (Q_s * a[2] + Q_z * a[1] - Q_x * a[3]),
+    r_z + 2 * (Q_s * a[3] + Q_x * a[2] - Q_y * a[1])]);
+
+M_derived : coefmatrix (r_rotated, [r_x, r_y, r_z]);
+
+M_defined : matrix
+  ([1 - 2 * Q_z^2 - 2 * Q_y^2, 
+    2 * Q_x * Q_y - 2 * Q_s * Q_z,
+    2 * Q_x * Q_z + 2 * Q_s * Q_y],
+   [2 * Q_s * Q_z + 2 * Q_x * Q_y,
+    1 - 2 * Q_z^2 - 2 * Q_x^2,
+    2 * Q_y * Q_z - 2 * Q_s * Q_x],
+   [2 * Q_x * Q_z - 2 * Q_s * Q_y,
+    2 * Q_y * Q_z + 2 * Q_s * Q_x,
+    1 - 2 * Q_y^2 - 2 * Q_x^2])$
+    
+is (M_derived = M_defined);
+
+/* end of file */

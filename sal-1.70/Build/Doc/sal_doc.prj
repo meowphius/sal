@@ -1,0 +1,4 @@
+-- LaTeX reports errors with relative path, so need "."
+src_dir=.
+src_dir=$MAKERULES
+src_dir=../../Doc

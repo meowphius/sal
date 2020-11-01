@@ -1,0 +1,161 @@
+(cvs-examine (substitute-in-file-name "$MAKERULES_ROOT") nil)
+(cvs-examine "." nil)
+
+release_process.text
+
+Build/Gnat_Debug/Makefile
+
+use AdaBrowse instead of gnathtml
+    http://home.tiscalinet.ch/t_wolf/tw/ada95/adabrowse/
+    ASIS-based
+    change so output is simpler (more like gnathtml)
+
+gen_stacks
+    assign Null_Item to popped array slots, so Finalize will be
+    called if Item_Type is Controlled.
+        write test first :).
+
+Build/Doc/Makefile
+Doc/spacecraft_math.tex
+    use pstopdf to get graphics (in MikTeX)
+    3 dof:
+        add consideration of axis (1, 0, e)
+    6 dof:
+        consider changing super/subscript in rate transform
+        negative moments of inertia? see Goldstein.
+
+Source_Common/Test/test_math_float_dof_3.adb
+    rot_matrix_pi
+        get correct results for RM_3, RM_4, or delete
+        examine mag_axis_to_rot_matrix for terms that throw away e
+
+    add missing tests near 0, pi
+    (1, 0, e) tests
+
+    use scaled e instead of Threshold?
+
+Source_Common/Test/test_math_float_manipulator_7.adb
+    expected cart_delta is (others => 0.0); threshold of 0.003 is pretty high!
+
+
+Change Math_Scalar.First_Order_Trig to Sqrt_Epsilon
+    review all uses; put in spacecraft_math.tex
+
+Source_Common/Test/test_math_float_gen_runge_kutta_4th.adb
+    need error estimate; check book, put in spacecraft_math.tex
+
+sal missing tests
+    sal-aux-sort_indefinite_items_definite_keys
+        used in VCR
+    sal-gen_math-gen_vector-gen_image
+    sal-math_double-dof_3-cacv_inverse.ads
+    sal-math_double-dof_3-image
+    sal-math_double-dof_6-image
+    sal-math_double-dof_6-integrator
+    sal-math_float-dof_3-cacv_inverse
+
+need tests for:
+    added for ACL strawman:
+        sal-poly-lists-double Set 
+
+    poly binary trees iterators on empty tree!
+    gray_code
+    word_order_convert
+    *_image
+    polynomials
+    time_conversions
+    
+fix poly-lists-single-iterators
+    not used in any algorithm?
+
+review test of find_linear.sorted.find_greater_equal
+    behaviour for backward, all greater
+
+test find_linear.delete, sorted.delete
+
+test find_linear.add (iterator out)
+
+other containers:
+with Sal.Poly.Unbounded_Arrays;
+with Sal.Poly.Lists.Single;
+with Sal.Gen.Lists.Double;
+
+delete poly.alg?
+    move sal.gen.alg to sal.alg?
+
+Source_Common/Test/test_poly_lists_double.adb
+    add missing tests
+
+Source_Common/Test/test_gen_alg_find_linear_integer_lists_sorted.adb
+    add tests for full path coverage
+
+sal.gen.lists.double
+    bug in delete_head if one item in list
+    bug in delete_tail if one item in list
+
+sal-time_conversions:
+    replace loops with mod, /
+
+unbounded_arrays
+    add test of new_item, free_item
+
+sal.gen.alg.count needs separate test
+sal.gen.alg.find_binary needs separate test
+sal.gen.alg.find_linear needs separate test
+sal.poly.alg.count needs separate test
+sal.poly.alg.process_all_constant needs separate test
+
+binary_trees.sorted.test is an algorithm for processing trees
+
+binary tree
+~/Ada/SAL/Test/sal-binary_trees-sorted_private-test.adb
+    gnat lib uses Lt_Function
+    split out non-sorted (for parse trees)
+    add in, pre, post iterators
+    add delete from Binstock
+    add balanced AVL from Binstock
+
+    (cvs-examine "../sal_work_balanced_trees" nil)
+
+    ../sal_work_balanced_trees/Build/Gnat_Debug/Makefile
+    ../sal_work_balanced_trees/Source_Common/sal-poly-binary_trees-sorted_balanced.adb
+        rewrite using AVL algorithm from Knuth
+            derive from Sorted if possible
+    ../sal_work_balanced_trees/Doc/balanced_tree.tex
+        just documents unit test cases
+
+test_gen_double
+    verify copy for non-integer
+    
+change sal-function_tables to sal-gen-function_tables
+    don't check explicity for monotonic; provide checker
+    
+performance_timers?
+    
+test trees with other key, value types (see lists test)
+
+test queue/stack/list with one element
+
+use Natural or System.Max_Int or user type for Size?
+    post to c.l.a
+
+hash table
+
+test_gen_stacks_bounded
+    verify full coverage
+	pop?
+
+test_poly_unbounded_arrays
+    test adjust
+
+Source_Common/sal-poly-binary_trees-sorted_base.ads
+    test limited, Duplicates_Allowed = false
+        test free in Add with duplicate
+
+    add comments about _aux, test being example instantiations
+
+ branches
+common_work_balanced_trees:
+    Uttam Majumbder college intern implementing AVL balanced trees; incomplete
+
+(end of file)

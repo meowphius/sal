@@ -1,0 +1,101 @@
+GCL (GNU Common Lisp)  Version(2.5.0) Thu Jan 30 02:37:51 CST 2003
+Licensed under GNU Library General Public License
+Contains Enhancements by W. Schelter
+
+Use (help) to get some basic information on how to use GCL.
+Maxima 5.9.0 http://maxima.sourceforge.net
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+This is a development version of Maxima. The function bug_report()
+provides bug reporting information.
+(C1) 		   BATCH(../../Doc/derive_math_dof_3.maxima)
+
+batching #pC:/Stephe/Ada/SAL/Doc/derive_math_dof_3.maxima
+(C2)  inertia : MATRIX([ixx, ixy, ixz], [ixy, iyy, iyz], [ixz, iyz, izz])
+			       [ ixx  ixy  ixz ]
+			       [	       ]
+(D2) 			       [ ixy  iyy  iyz ]
+			       [	       ]
+			       [ ixz  iyz  izz ]
+(C3) 			 invinertia : INVERT(inertia)
+			   2			 2
+(D3) MATRIX([(iyy izz - iyz )/(ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz)
+
+ + ixz (ixy iyz - ixz iyy)), 
+
+			   ixz iyz - ixy izz
+------------------------------------------------------------------------, 
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+			   ixy iyz - ixz iyy
+------------------------------------------------------------------------], 
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+			    ixz iyz - ixy izz
+[------------------------------------------------------------------------, 
+		   2
+ ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+					  2
+			     ixx izz - ixz
+------------------------------------------------------------------------, 
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+			   ixy ixz - ixx iyz
+------------------------------------------------------------------------], 
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+			    ixy iyz - ixz iyy
+[------------------------------------------------------------------------, 
+		   2
+ ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+			   ixy ixz - ixx iyz
+------------------------------------------------------------------------, 
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+
+					  2
+			     ixx iyy - ixy
+------------------------------------------------------------------------])
+		  2
+ixx (iyy izz - iyz ) + ixy (ixz iyz - ixy izz) + ixz (ixy iyz - ixz iyy)
+(C4) 		        optinv1 : OPTIMIZE(invinertia)
+							   2
+(D4) BLOCK([%1, %2, %3, %4, %5, %6, %7], %1 : iyy izz - iyz , 
+
+								1
+%2 : ixy iyz - ixz iyy, %3 : ixz iyz - ixy izz, %4 : ------------------------, 
+						     ixx %1 + ixy %3 + ixz %2
+
+%5 : %3 %4, %6 : %2 %4, %7 : (ixy ixz - ixx iyz) %4, 
+
+[ %1 %4		 %5		      %6	  ]
+[						  ]
+[		       2			  ]
+[  %5	 (ixx izz - ixz ) %4	      %7	  ])
+[						  ]
+[					    2	  ]
+[  %6		 %7	      (ixx iyy - ixy ) %4 ]
+(C5) 		    optinv2 : OPTIMIZE(EXPAND(invinertia))
+						 2	    2	       2
+(D5) BLOCK([%1, %2, %3, %4, %5, %6, %7], %1 : iyz , %2 : ixz , %3 : ixy , 
+
+			       1
+%4 : ------------------------------------------------------, 
+     ixx iyy izz - %3 izz - ixx %1 + 2 ixy ixz iyz - %2 iyy
+
+%5 : ixz iyz %4 - ixy izz %4, %6 : ixy iyz %4 - ixz iyy %4, 
+
+%7 : ixy ixz %4 - ixx iyz %4, 
+
+[ iyy izz %4 - %1 %4	      %5		  %6	     ]
+[							     ]
+[ 	  %5	      ixx izz %4 - %2 %4	  %7	     ])
+[							     ]
+[	  %6		      %7	  ixx iyy %4 - %3 %4 ]
+(D6) 		      ../../Doc/derive_math_dof_3.maxima

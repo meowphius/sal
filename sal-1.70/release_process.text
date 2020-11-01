@@ -1,0 +1,191 @@
+do Auto_Text_IO first (for text_io children in SAL)
+    c:/Projects/GDS/auto_text_io/main/release_process.text
+
+Build/Doc/Makefile
+    maxima-diffs
+        .out contains absolute path; do this before switch to sal-i.jj
+
+(cvs-examine "." nil)
+(cvs-examine (getenv "MAKERULES") nil)
+
+review changes since last release date:
+    cd $SAL
+    cvs log -d ">2004/04/04" | perl c:/Archive/Gnu/Misc/cvs2cl.pl --stdin
+    ChangeLog
+    Doc/sal.html
+        do history
+
+Decide on version bump
+    Major redesign; i+1
+    Major new feature: i.j+1
+    fixes, minor features: i.jj+1
+
+change version in this file; replace i.jj with i.jj + 1
+
+check in this file, history.html
+
+cd ..
+cvs -d stephe@osgroup.gsfc.nasa.gov:/home/cvs/public/ada checkout -dsal-1.70 SAL
+cd sal-1.70
+rm -rf Build/Gnat_Debug
+rm -rf Build/Gnat_Release
+rm -rf Build/Maxima
+
+cd ../makerules
+cvs -d stephe@osgroup.gsfc.nasa.gov:/home/cvs/public/ada checkout -dmakerules-1.70 Makerules
+
+~/develop_settings.el
+    in "pre-release testing" setup, set SAL, MAKERULES
+    do pre-release setup
+
+switch to $SAL/release_process.text
+
+change version
+    Readme.txt
+        check copyright date, web link
+
+    Build/Makefile
+        CVS_VERSION
+        ZIP_VERSION
+
+    ~/Web/Makefile
+        SAL_ZIP_VERSION
+
+    Doc/sal.html
+        replace i.jj with i.jj+1
+        copyright date
+        tool versions, installation
+
+    Source_Common/sal.adb "function Version"
+
+verify latest gnatmake options
+    Build/debug_windows_x86_gnu/sal.gpr
+    Build/release_windows_x86_gnu/sal.gpr
+    $MAKERULES/standard_common.gpr
+
+Auto_Text_IO release should have left SAL text_io children in SAL.
+
+loop until no changes:
+    first time thru, use GNAT 3.15p
+    second time thru, use GNAT 5.02a1, release auto_text_io, sal-1.70, makerules-1.70
+
+    Build/debug_windows_x86_gnu/Makefile
+        maintainer-clean
+        all
+        Compare Source_Common, Build/debug_windows_x86_gnu for missing .ali => missing test
+            copy both to same temp buffer, delete directory stuff, sort lines
+            ada_strings_unbounded_text_io; missing test
+            all_sal; ignore
+            all_sal_text_io; ignore
+            float_text_io; instantiation - ignore
+            sal-aux-sort_indefinite_items_definite_keys; need test
+            sal-endianness_gnat_mongoose; ignore
+            sal-endianness_objectada_x86; ignore
+            sal-gen_math-gen_dof_3-gen_aunit; need to use in test
+            sal-gen_math-gen_dof_3-gen_network_order; need test
+            sal-gen_math-gen_dof_6-gen_aunit; need to use in test
+            sal-gen_math-gen_dof_6-gen_image; need test
+            sal-gen_math-gen_dof_6-gen_network_order; need test
+            sal-gen_math-gen_*-gen_text_io-[get|put]_* are subunits; no .ali
+            sal-gen_math-gen_manipulator-slow_* are subunits; no .ali
+            sal-gen_math-gen_polynomials-gen_text_io; auto_text_io - ignore
+            sal-gen_math-gen_vector-gen_image; need test
+            sal-math_double-*; instantiation - ignore
+            sal-math_float-*; instantiation - ignore
+
+    if GNAT 3.15p
+        optimizer broken; don't test in release
+        GtkAda breaks 3.15p
+    else
+        Build/x86_gnu_windows_debug_gtk/Makefile
+            all
+
+        Build/release_windows_x86_gnu/Makefile
+            lib
+                Compare Source_Common, Build/Gnat_Release for missing .ali => missing "with" in all_sal.adb
+            lib-text_io
+            tests times
+
+    end if
+
+    Build/Doc/Makefile
+        pdfs
+            maxima-diffs done above
+            html done later
+
+    Build/Makefile
+        maintainer-clean
+            check for new clean actions
+
+    (cvs-examine (getenv "MAKERULES") nil)
+    (cvs-examine "." nil)
+end loop
+
+~/develop_settings.el
+    switch to current gnat to run gnathtml
+    (gnathtml requires all_sal.ali, which gnat 3.15p can't build)
+
+Build/release_windows_x86_gnu/Makefile
+    lib
+Build/Doc/Makefile
+    html
+
+Build/Makefile
+    zip
+
+test:
+    cd c:/Test
+    tar zxf ../Projects/GDS/sal/sal-1.70/Build/sal-1.70.tar.gz
+    ~/develop_settings.el
+        in "release testing"
+        define MAKERULES to c:/Test/Makerules-1.70
+        define SAL to c:/Test/SAL-1.70
+        do release testing
+
+    if GNAT 3.15p
+        c:/Test/sal-1.70/Build/debug_windows_x86_gnu/Makefile
+            all
+    else
+        SAL-1.70/Build/release_windows_x86_gnu/Makefile
+            lib lib-text_io
+    end if;
+
+    cd c:/Test
+    rm -rf sal-*
+    rm -rf makerules-*
+
+~/develop_settings.el
+    do pre-release
+
+(cvs-examine "." nil)
+(cvs-examine (substitute-in-file-name "$MAKERULES") nil)
+
+Build/Makefile
+    tag
+    zip
+
+~/develop_settings.el
+    do normal
+
+(cvs-examine (substitute-in-file-name "$SAL") nil)
+(cvs-examine (substitute-in-file-name "$MAKERULES") nil)
+
+publish:
+    ~/Web/Makefile
+        sal
+        ada_wizard-file
+    ws_ftp
+        ada_wizard-web
+
+save c:/Projects/GDS/sal/sal-1.70 for reference, bug reports
+    cd c:/Projects/GDS/sal
+    rm -rf sal-1.70 -1
+    cd ../makerules
+    rm -rf makerules-1.70 -1
+
+set release date in top of this file cvs log
+
+announce:
+    comp.lang.ada
+
+(end of file)

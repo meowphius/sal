@@ -1,0 +1,125 @@
+GCL (GNU Common Lisp)  Version(2.5.0) Thu Jan 30 02:37:51 CST 2003
+Licensed under GNU Library General Public License
+Contains Enhancements by W. Schelter
+
+Use (help) to get some basic information on how to use GCL.
+Maxima 5.9.0 http://maxima.sourceforge.net
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+This is a development version of Maxima. The function bug_report()
+provides bug reporting information.
+(C1) 		     BATCH(derive_vect_scalar_quat.maxima)
+
+batching #pc:/Projects/GDS/sal/main/Doc/derive_vect_scalar_quat.maxima
+(C2) 				  LINEL : 120
+(C3) 						       LOAD(vect)
+(D3) 			    c:/msys/1.0/maxinstall/share/maxima/5.9.0/share/vector/vect.mac
+(C4) 		   quat_times_quat_vs(Q1, Q2) := [Q1  ~ Q2  + Q2  Q1  + Q1  Q2 , Q1  Q2  - Q1  . Q2 ]
+						    1	  1     2   1	  2   1	   2   2     1	   1
+(C5) 					    Qa : [[Q_ax, Q_ay, Q_az], Q_as]
+(D5) 					       [[Q_ax, Q_ay, Q_az], Q_as]
+(C6) 					    Qb : [[Q_bx, Q_by, Q_bz], Q_bs]
+(D6) 					       [[Q_bx, Q_by, Q_bz], Q_bs]
+(C7) 				        qa_qb_vs_1 : quat_times_quat_vs(Qa, Qb)
+(D7) [[Q_as Q_bx + Q_ax Q_bs, Q_as Q_by + Q_ay Q_bs, Q_as Q_bz + Q_az Q_bs] + [Q_ax, Q_ay, Q_az] ~ [Q_bx, Q_by, Q_bz], 
+
+									- Q_az Q_bz - Q_ay Q_by - Q_ax Q_bx + Q_as Q_bs]
+(C8) 					    qa_qb_vs_2 : EXPRESS(qa_qb_vs_1)
+(D8) [[Q_ay Q_bz - Q_az Q_by + Q_as Q_bx + Q_ax Q_bs, - Q_ax Q_bz + Q_as Q_by + Q_az Q_bx + Q_ay Q_bs, 
+
+			Q_as Q_bz + Q_ax Q_by - Q_ay Q_bx + Q_az Q_bs], - Q_az Q_bz - Q_ay Q_by - Q_ax Q_bx + Q_as Q_bs]
+(C9) quat_times_quat(Qa, Qb) := [[(Qa )  Qb  + Qa  (Qb )  - (Qa )  (Qb )  + (Qa )  (Qb ) , 
+				     1 1   2	 2    1 1      1 3    1 2      1 2    1 3
+
+(Qa )  Qb  + (Qa )  (Qb )  + Qa  (Qb )  - (Qa )  (Qb ) , (Qa )  Qb  - (Qa )  (Qb )  + (Qa )  (Qb )  + Qa  (Qb ) ], 
+   1 2	 2      1 3    1 1     2    1 2	     1 1    1 3	    1 3	  2	 1 2    1 1	 1 1    1 2     2    1 3
+
+Qa  Qb  - (Qa )  (Qb )  - (Qa )  (Qb )  - (Qa )  (Qb ) ]
+  2   2	     1 1    1 1	     1 2    1 2	     1 3    1 3
+(C10) 					  qa_qb_def : quat_times_quat(Qa, Qb)
+(D10) [[Q_ay Q_bz - Q_az Q_by + Q_as Q_bx + Q_ax Q_bs, - Q_ax Q_bz + Q_as Q_by + Q_az Q_bx + Q_ay Q_bs, 
+
+			Q_as Q_bz + Q_ax Q_by - Q_ay Q_bx + Q_az Q_bs], - Q_az Q_bz - Q_ay Q_by - Q_ax Q_bx + Q_as Q_bs]
+(C11) 					       IS(qa_qb_def = qa_qb_vs_2)
+(D11) 							  TRUE
+(C12) 						    EXPANDALL : TRUE
+(D12) 							  TRUE
+(C13) 	 quat_times_vect_vs(Q, V) := VECTORSIMP(quat_times_quat_vs(quat_times_quat_vs(Q, [V, 0]), [- Q , Q ]) )
+												      1	  2  1
+(C14) 					        r1 : [r_1x, r_1y, r_1z]
+(D14) 						   [r_1x, r_1y, r_1z]
+(C15) 					  qv_vs_1 : quat_times_vect_vs(Qb, r1)
+(D15) Q_bs [Q_bx, Q_by, Q_bz] ~ [r_1x, r_1y, r_1z] - [- Q_bx, - Q_by, - Q_bz] ~ [Q_bs r_1x, Q_bs r_1y, Q_bs r_1z]
+
+							    2	    2	    2		  2
+ + [- 2 Q_bx (- Q_bz r_1z - Q_by r_1y - Q_bx r_1x) + (- Q_bz  - Q_by  - Q_bx ) r_1x + Q_bs  r_1x, 
+
+							2       2       2	      2
+- 2 Q_by (- Q_bz r_1z - Q_by r_1y - Q_bx r_1x) + (- Q_bz  - Q_by  - Q_bx ) r_1y + Q_bs  r_1y, 
+
+							2       2       2	      2
+- 2 Q_bz (- Q_bz r_1z - Q_by r_1y - Q_bx r_1x) + (- Q_bz  - Q_by  - Q_bx ) r_1z + Q_bs  r_1z]
+(C16) 					   qv_vs_2 : EXPAND(EXPRESS(qv_vs_1))
+										       2	    2		 2
+(D16) [2 Q_bx Q_bz r_1z + 2 Q_bs Q_by r_1z - 2 Q_bs Q_bz r_1y + 2 Q_bx Q_by r_1y - Q_bz  r_1x - Q_by  r_1x + Q_bx  r_1x
+
+       2						 2	      2		   2	        2
+ + Q_bs  r_1x, 2 Q_by Q_bz r_1z - 2 Q_bs Q_bx r_1z - Q_bz  r_1y + Q_by  r_1y - Q_bx  r_1y + Q_bs  r_1y
+
+					    2		 2	      2		   2
+ + 2 Q_bs Q_bz r_1x + 2 Q_bx Q_by r_1x, Q_bz  r_1z - Q_by  r_1z - Q_bx  r_1z + Q_bs  r_1z + 2 Q_by Q_bz r_1y
+
+ + 2 Q_bs Q_bx r_1y + 2 Q_bx Q_bz r_1x - 2 Q_bs Q_by r_1x]
+						    2	      2	      2	      2
+(C17) 			 qv_vs_3 : EXPAND(SUBST(Q_bs  = - Q_bz  - Q_by  - Q_bx  + 1, qv_vs_2))
+											 2	        2
+(D17) [2 Q_bx Q_bz r_1z + 2 Q_bs Q_by r_1z - 2 Q_bs Q_bz r_1y + 2 Q_bx Q_by r_1y - 2 Q_bz  r_1x - 2 Q_by  r_1x + r_1x, 
+
+					    2		   2
+2 Q_by Q_bz r_1z - 2 Q_bs Q_bx r_1z - 2 Q_bz  r_1y - 2 Q_bx  r_1y + r_1y + 2 Q_bs Q_bz r_1x + 2 Q_bx Q_by r_1x, 
+
+	2	       2
+- 2 Q_by  r_1z - 2 Q_bx  r_1z + r_1z + 2 Q_by Q_bz r_1y + 2 Q_bs Q_bx r_1y + 2 Q_bx Q_bz r_1x - 2 Q_bs Q_by r_1x]
+(C18) quat_times_vect_active(Q, V) := BLOCK(LOCAL(a), a : [(Q )  V  - (Q )  V , (Q )  V  - (Q )  V , 
+							     1 2  3     1 3  2	  1 3  1     1 1  3
+
+(Q )  V  - (Q )  V ], EXPAND([2 (- (Q )  a  + (Q )  a  + Q  a ) + V , 2 (- (Q )  a  + (Q )  a  + Q  a ) + V , 
+  1 1  2     1 2  1		     1 3  2     1 2  3	  2  1	   1	     1 1  3     1 3  1	  2  2	   2
+
+2 (- (Q )  a  + (Q )  a  + Q  a ) + V ]))
+       1 2  1	  1 1  2    2  3     3
+(C19) 				        qv_def : quat_times_vect_active(Qb, r1)
+											 2	        2
+(D19) [2 Q_bx Q_bz r_1z + 2 Q_bs Q_by r_1z - 2 Q_bs Q_bz r_1y + 2 Q_bx Q_by r_1y - 2 Q_bz  r_1x - 2 Q_by  r_1x + r_1x, 
+
+					    2		   2
+2 Q_by Q_bz r_1z - 2 Q_bs Q_bx r_1z - 2 Q_bz  r_1y - 2 Q_bx  r_1y + r_1y + 2 Q_bs Q_bz r_1x + 2 Q_bx Q_by r_1x, 
+
+	2	       2
+- 2 Q_by  r_1z - 2 Q_bx  r_1z + r_1z + 2 Q_by Q_bz r_1y + 2 Q_bs Q_bx r_1y + 2 Q_bx Q_bz r_1x - 2 Q_bs Q_by r_1x]
+(C20) 						  IS(qv_vs_3 = qv_def)
+(D20) 							  TRUE
+(C21) 						 DECLARE(r, NONSCALAR)
+(C22) 						 DECLARE(n, NONSCALAR)
+(C23) 						 DECLARE(THETA, SCALAR)
+								   THETA       THETA
+(C24) 			     qv_aavs_1 : quat_times_vect_vs([n SIN(-----), COS(-----)], r)
+								     2		 2
+		2 THETA		        2 THETA		  2 THETA		     THETA      THETA
+(D24) 	   - SIN (-----) (n . n) r + COS (-----) r + 2 SIN (-----) n (n . r) + 2 COS(-----) SIN(-----) n ~ r
+		    2			    2		      2			       2	  2
+(C25) 						  SUBST(n . n = 1, %)
+		    2 THETA	    2 THETA	      2 THETA			 THETA	    THETA
+(D25) 	       - SIN (-----) r + COS (-----) r + 2 SIN (-----) n (n . r) + 2 COS(-----) SIN(-----) n ~ r
+			2	        2		  2			   2	      2
+(C26) 						     TRIGREDUCE(%)
+					   n (n . r)   COS(THETA) n (n . r)
+(D26) 			 COS(THETA) r + 2 (--------- - --------------------) + SIN(THETA) n ~ r
+					       2	        2
+(C27) 						 qv_aavs_2 : EXPAND(%)
+(D27) 			   COS(THETA) r - COS(THETA) n (n . r) + n (n . r) + SIN(THETA) n ~ r
+(C28) 		     aa_def : EXPAND(n (r . n) (1 - COS(THETA)) - r ~ n SIN(THETA) + r COS(THETA))
+(D28) 			   COS(THETA) r - COS(THETA) n (n . r) + n (n . r) + SIN(THETA) n ~ r
+(C29) 						 IS(aa_def = qv_aavs_2)
+(D29) 							  TRUE
+(D30) 					     derive_vect_scalar_quat.maxima

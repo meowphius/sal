@@ -1,0 +1,91 @@
+diff -r -c maxinstall-orig/bin/maxima maxinstall/bin/maxima
+*** maxinstall-orig/bin/maxima	Sun Feb  9 21:59:53 2003
+--- maxinstall/bin/maxima	Fri Oct 31 15:25:50 2003
+***************
+*** 1,4 ****
+! #!/bin/sh
+  
+  usage () {
+  	cat << EOF
+--- 1,4 ----
+! #!/bin/bash
+  
+  usage () {
+  	cat << EOF
+***************
+*** 29,35 ****
+    GCL=gcl
+    export CLISP CMUCL GCL
+    MAXIMA_VERSION=5.9.0
+!   prefix=c:/msys/1.0/maxinstall
+    exec_prefix=${prefix}
+    PACKAGE=maxima
+    VERSION=5.9.0
+--- 29,35 ----
+    GCL=gcl
+    export CLISP CMUCL GCL
+    MAXIMA_VERSION=5.9.0
+!   prefix="`dirname \`dirname $0\``"
+    exec_prefix=${prefix}
+    PACKAGE=maxima
+    VERSION=5.9.0
+***************
+*** 176,181 ****
+--- 176,192 ----
+  process_args "$@"
+  setup_vars
+  
++ if [ ! -x "$MAXIMA_VERPKGLIBEXECDIR/maxima-run-lisp" ]; then
++ # Have we been moved?
++   MAXIMA_PREFIX="`dirname \`dirname $0\``"
++   unsetup_vars
++   setup_vars
++   if [ ! -x "$MAXIMA_VERPKGLIBEXECDIR/maxima-run-lisp" ]; then
++     echo "$0: unable to determine MAXIMA_PREFIX" 1>&2
++     exit 1
++   fi
++ fi
++ 
+  if [ -n "$show_version" ]; then
+    echo "Maxima $VERSION"
+    exit 0
+***************
+*** 203,218 ****
+  LISPTYPE=$MAXIMA_LISP
+  export LISPTYPE
+  
+- if [ ! -x "$MAXIMA_VERPKGLIBEXECDIR/maxima-run-lisp" ]; then
+- # Have we been moved?
+-   MAXIMA_PREFIX="`dirname \`dirname $0\``"
+-   unsetup_vars
+-   setup_vars
+-   if [ ! -x "$MAXIMA_VERPKGLIBEXECDIR/maxima-run-lisp" ]; then
+-     echo "$0: unable to determine MAXIMA_PREFIX" 1>&2
+-     exit 1
+-   fi
+- fi
+    
+  unset MAXIMA_INT_LISP_PRELOAD
+  unset MAXIMA_INT_INPUT_STRING
+--- 214,219 ----
+diff -r -c maxinstall-orig/share/maxima/5.9.0/share/vector/vect.mac maxinstall/share/maxima/5.9.0/share/vector/vect.mac
+*** maxinstall-orig/share/maxima/5.9.0/share/vector/vect.mac	Sun Feb  9 22:01:08 2003
+--- maxinstall/share/maxima/5.9.0/share/vector/vect.mac	Sat Nov  1 10:54:03 2003
+***************
+*** 35,41 ****
+  TELLSIMPAFTER(ETRUE~0, 0) $
+  TELLSIMPAFTER(ETRUE~ETRUE, 0)$
+  TELLSIMPAFTER(ETRUE~TTRUE.VTRUE, ETRUE.TTRUE~VTRUE)$
+! TELLSIMP(ETRUE~LESSP, -LESSP~ETRUE) $
+  TELLSIMPAFTER(DIV (CURL( ETRUE)), 0) $
+  TELLSIMPAFTER(CURL (GRAD( ETRUE)), 0) $
+  TELLSIMPAFTER(VECTORPOTENTIAL(ETRUE,TTRUE),
+--- 35,41 ----
+  TELLSIMPAFTER(ETRUE~0, 0) $
+  TELLSIMPAFTER(ETRUE~ETRUE, 0)$
+  TELLSIMPAFTER(ETRUE~TTRUE.VTRUE, ETRUE.TTRUE~VTRUE)$
+! TELLSIMP(ETRUE~LESSP, -(LESSP~ETRUE)) $
+  TELLSIMPAFTER(DIV (CURL( ETRUE)), 0) $
+  TELLSIMPAFTER(CURL (GRAD( ETRUE)), 0) $
+  TELLSIMPAFTER(VECTORPOTENTIAL(ETRUE,TTRUE),
+Files maxinstall-orig/uninst/unins000.dat and maxinstall/uninst/unins000.dat differ

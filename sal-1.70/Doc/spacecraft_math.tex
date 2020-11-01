@@ -1,0 +1,1098 @@
+\documentclass{book}
+\usepackage{amsmath}
+\usepackage{math_entities}
+\usepackage{sal_misc}
+\usepackage[bookmarksnumbered]{hyperref}
+\usepackage{url}
+
+%%% local commands
+\newcommand\wertzquat[1] % arg is primes. use ^* for conjugate
+    {{\bf\it q}#1}
+%%% local settings
+
+\numberwithin{equation}{subsection}
+
+\pagestyle{headings}
+
+%% space between paragraphs, not first line indented
+\parindent 0in
+\parskip 2ex
+
+\begin{document}
+
+\title{Spacecraft Math}
+\author{Stephen Leake}
+\date{ 2 January 2004}
+\maketitle
+
+\chapter {Introduction}
+
+This document presents a thorough summary of vector, quaternion, and
+matrix math used in spacecraft applications, in both flight and
+simulation. It presents a standard notation, shows recommended usage,
+and provides references to other treatments of these topics as
+appropriate.
+
+We start with a discussion of basic concepts; rotations, translations,
+poses, rates, wrenches, mass and inertia. Then we discuss various
+algorithms used in spacecraft software.
+
+Each section is composed of three subsections; Reference, Coding, and
+Derivations. Reference gives the definitions and equations for the
+section. Coding points to the software source code implementing the
+section, and discusses any software design issues. Derivations
+motivates the definitions in the Reference subsection, discusses how
+they relate to similar equations in other works, and derives the
+equations from first principles. In many cases, Derivation refers to
+Macsyma code that provides the detailed algebraic manipulations.
+
+Since the purpose of this document is to allow writing accurate
+software, all equations are presented in vector notation, with the
+coordinate frames clearly indicated.
+
+\subsection {References}
+[Kane83] Thomas R. Kane, Peter W. Likins, David A. Levinson,
+Spacecraft Dynamics, 1983
+
+[Wertz78] James R. Wertz, ed., Spacecraft Attitude Determination and
+Control, 1978.
+
+[Shoemake85] Ken Shoemake, ``Animating Rotation with Quaternion
+Curves'', Computer Graphics, volume 19, number 3, 1985. pp 245-254
+
+\chapter {3 DOF}
+The main math of interest in 3 degrees of freedom is rotating vectors.
+
+There are many representations of rotations. The two most important
+for computation are unit quaternions and orthonormal 3-by-3 matrices;
+these can be multiplied to combine rotations, and used to rotate
+vectors. On the other hand, the most intuitive representation is angle
+axis; it is usually easy for people to visualize a rotation as an
+angle about an axis.
+
+In many situations, the actual representation of a rotation is not
+important; we can think of an abstract rotation {\bf R}. So we first
+present notation for abstract rotations, then discuss angle axis,
+quaternions, rotation matrices, and other representations that have
+special purposes.
+
+\section{Abstract rotations}
+\subsection{Reference}
+An abstract rotation is denoted by ${\bf R}$. The inverse rotation
+(same axis and magnitude, opposite direction) is denoted ${\bf R^{-1}}$.
+
+Careful attention must be paid to labeling vectors and frames. We use
+post-subscripts to label a vector independent of what frame it is
+expressed in, and pre-superscripts to label the Cartesian frame the
+vector is expressed in. Thus:
+
+\begin{eqnarray}
+\translation{b}{obj} &=& \rotation{b}{a} \translation{a}{obj} \\
+\label{eqn:generic_rotation_passive}
+\translation{a}{obj,rot} &=& \rotation{a}{1} \translation{a}{obj}
+\label{eqn:generic_rotation_active}
+\end{eqnarray}
+
+$\translation{b}{obj}$ is the same physical vector as
+$\translation{a}{obj}$, but expressed in a different reference frame.
+This is called a \emph{passive} rotation. On the other hand,
+$\translation{a}{obj,rot}$ is a different vector. It is not parallel
+to $\translation{a}{obj}$, although it is expressed in the same frame;
+this is called an \emph{active} rotation. Note that in the active
+rotation, the post-subscript $1$ simply identifies the rotation; it
+does not indicate a frame.
+
+Note that the inverse of a rotation is obtained by swapping labels,
+and that an active rotation is simply the inverse of the corresponding
+passive rotation:
+\begin{equation}
+\rotation{a}{b}^{-1} = \rotation{b}{a} \label{eqn:generic_inverse}
+\end{equation} 
+The notation helps get the frames and usage correct; when changing
+reference frames (passive rotation), the post-subscript must match the
+pre-superscript for the equation to make sense. On the other hand,
+when physically rotating vectors (active rotation), all the
+pre-superscripts must be the same. This convention is especially
+useful when more than one rotation is present:
+\begin{eqnarray}
+\rotation{c}{a} &=& \rotation{c}{b} \rotation{b}{a} \\
+\translation{c}{obj} &=& \rotation{c}{b} \rotation{b}{a} \translation{a}{obj} 
+\label{eqn:generic_multi_passive}\\
+\rotation{a}{3} &=& \rotation{a}{1} \rotation{a}{2} \\
+\translation{a}{obj,rot} &=& \rotation{a}{1} \rotation{a}{2} \translation{a}{obj}
+\label{eqn:generic_multi_active}
+\end{eqnarray}
+
+Again, in the active rotation, the post-subscripts $1, 2, 3$ simply identify the
+rotations; they do not indicate a frame.
+
+Note that \ref{eqn:generic_inverse} holds for combined rotations:
+\begin{eqnarray}
+\rotation{c}{a}      & = & \rotation{c}{b} \rotation{b}{a} \nonumber           \\
+\rotation{c}{a}^{-1} & = & \rotation{b}{a}^{-1} \rotation{c}{b}^{-1} \nonumber \\
+                     & = & \rotation{a}{b} \rotation{b}{c}           \nonumber \\
+                     & = & \rotation{a}{c} \label{eqn:generic_combined_inverse}
+\end{eqnarray}
+
+Rotations are not commutative; $\rotation{}{b} \rotation{}{a}$ is not
+the same as $\rotation{}{a} \rotation{}{b}$. Thus we must define which
+rotation is performed first when combining rotations. 
+
+For passive rotations, which change the frame of a vector, the first
+transformation is on the right - coordinate transform
+$\rotation{b}{a}$ is the first performed in
+\ref{eqn:generic_multi_passive}. For active rotations, which
+physically move the object, the first rotation is on the left -
+$\rotation{a}{1}$ is the first performed in
+\ref{eqn:generic_multi_active}. This is consistent with
+\ref{eqn:generic_combined_inverse}.
+
+Note that it is possible to define a different rotation operator, that
+multiplies vectors on the right:
+\begin{eqnarray}
+\translation{b}{obj} &=& \translation{a}{obj} \gmatrix{b}C{a} \nonumber \\
+\translation{a}{obj,rot} &=& \translation{a}{obj} \gmatrix{a}C{1} \nonumber
+\end{eqnarray}
+[Kane83] uses this convention for rotation matrices, and [Wertz78]
+uses it for quaternions. Other authors follow our convention of
+multiplying on the left. This complicates the issue of relating our
+equations to other authors. We call ${\bf R}$ a \emph{left-multiply}
+operator, and ${\bf C}$ a \emph{right-multiply} operator. Usually we
+will use the symbol ${\bf R}$ for both, with the meaning clear from
+context.
+
+\subsection{Coding}
+There is no type corresponding to an abstract rotation. However,
+similar operations for the concrete rotation types are coded in
+similar ways, to make it easy to change the rotation type in
+applications.
+
+A single program should consistently use either the right-multiply or
+left-multiply convention for quaternions and matrices. This choice
+should be supported by the math library. The \code{SAL} math library
+currently supports only left-multiply operators. Right-multiply
+operators can be added if needed; distinct types will be used to
+enforce consistent usage.
+
+In any case, careful attention must be paid to whether rotations are
+active vs passive, to the signs of angles, and to the order of
+operands in multiplication.
+
+\subsection{Derivations}
+This section serves simply to define the notion of an abstract
+rotation, to establish a notation, and to establish a multiplication
+order convention.
+
+\section{Angle Axis rotation representation}
+\subsection{Reference}
+
+Every active rotation can be expressed as an angle about an axis. If
+$\theta_b$ is the angle from vector $\translation{a}{obj}$ to vector
+$\translation{a}{obj,rot}$ about axis ${\gunit{a}{n}{b}}$, then
+\begin{equation}
+\rotation{a}{b} = (\theta_b, \gunit{a}{n}{b}) \label{eqn:angle_axis_b}
+\end{equation}
+
+Note that $\gunit{}{n}{}$ has magnitude 1:
+\begin{equation}
+n_x^2 + n_y^2 + n_z^2 = 1
+\label{eqn:n_mag_1}
+\end{equation}
+
+The rotation is in the right-hand sense; if the right thumb is aligned with the
+axis, the fingers curl in the direction of the active rotation.
+
+Note that the same rotation can be represented by negating both $\theta_b$ and $\gunit{a}{n}{b}$:
+\begin{equation}
+\rotation{a}{b} = (-\theta_b, -\gunit{a}{n}{b}) \label{eqn:negate_angle_axis}
+\end{equation}
+
+So generally we can choose $0 <= \theta_b <= \pi$.
+
+The inverse rotation is:
+\begin{equation}
+\rotation{b}{a} = (-\theta_b, \gunit{a}{n}{b}) \label{eqn:angle_axis_inverse_b}
+\end{equation}
+
+The active rotation can be computed by:
+\begin{equation}
+\translation{a}{obj,rot} = \translation{a}{obj} cos \theta_b - 
+\translation{a}{obj} \cross \gunit{a}{n}{b} sin \theta_b + 
+\gunit{a}{n}{b} \translation{a}{obj} \cdot \gunit{a}{n}{b} (1 - cos \theta_b)
+\label{eqn:angle_axis_active}
+\end{equation}
+
+Note that if we have two rotations $(\theta_1, \gunit{}{n}{1})$ and
+$(\theta_2, \gunit{}{n}{2})$, there is no simple way to find the
+equivalent total rotation. Rotation quaternions or matrices provide
+that operation.
+
+We now consider a passive rotation. Using the rotation defined in
+\ref{eqn:angle_axis_b}, frame $b$ is obtained from frame $a$ by
+actively rotating the axes of $a$ by $\rotation{a}{b}$:
+\begin{eqnarray}
+\gvector{a}{\hat x}{b} &=& \rotation{a}{b} \gvector{a}{\hat x}{a} \nonumber \\
+\gvector{a}{\hat y}{b} &=& \rotation{a}{b} \gvector{a}{\hat y}{a} \nonumber \\
+\gvector{a}{\hat z}{b} &=& \rotation{a}{b} \gvector{a}{\hat z}{a} \label{eqn:passive_frames_def}
+\end{eqnarray}
+Then the passive rotation that changes the frame of vectors from $a$
+to $b$ is:
+\begin{equation}
+\rotation{b}{a} = (-\theta_b, \gunit{a}{n}{b})
+\end{equation}
+The change of frame is computed by:
+\begin{equation}
+\translation{b}{obj} = \translation{a}{obj} cos \theta_b + 
+\translation{a}{obj} \cross \gunit{a}{n}{b} sin \theta_b + 
+\gunit{a}{n}{b} \translation{a}{obj} \cdot \gunit{a}{n}{b} (1 - cos \theta_b)
+\label{eqn:angle_axis_passive}
+\end{equation}
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.Gen_DOF_3.Mag_Axis_Type} implements the
+angle axis rotation representation. The only operations provided are
+scaling and conversion to quaternions and rotation matrixes.
+
+A variable representing the abstract rotation $\rotation{a}{b}$ is written
+\code{A_Rot_B}.
+
+\subsection {Derivations}
+First we show that \ref{eqn:angle_axis_active} is correct. We use the
+rotation defined in \ref{eqn:angle_axis_b}, and the Cartesian
+coordinate frames defined in \ref{eqn:passive_frames_def}. Frame $a$
+is fixed to the non-rotated vector ${\translation{a}{obj}}$; frame $b$
+is fixed to the rotated vector ${\translation{a}{obj,rot}}$. Without
+loss of generality, we can let the axis of rotation $\gunit{}{n}{b} =
+\gunit{}{z}{a} = \gunit{}{z}{b}$ (this just defines the two frames
+uniquely). For simplicity, we drop the $obj$ suffix, and use $r_x$ to
+denote the x component of vector r in either frame. By definition:
+\begin{eqnarray}
+{\translation{a}{obj}} &=& r_x \gunit{a}{x}{a} + r_y \gunit{a}{y}{a} + r_z \gunit{a}{z}{a}
+\end{eqnarray}
+Because ${\translation{a}{obj,rot}}$ is a rotation of
+${\translation{a}{obj}}$, it has the same values for its components in
+$b$ as in $a$, so we can write:
+\begin{eqnarray}
+{\translation{a}{obj,rot}} &=& r_x \gunit{a}{x}{b} + r_y \gunit{a}{y}{b} + r_z \gunit{a}{z}{b} \label{eqn:vect_rot_b}
+\end{eqnarray}
+The axes of the frames are related by:
+\begin{eqnarray}
+\gunit{a}{x}{b} &=& cos \theta_b \gunit{a}{x}{a} + sin \theta_b \gunit{a}{y}{a} \label{eqn:vect_rot_bx} \\
+\gunit{a}{y}{b} &=& - sin \theta_b \gunit{a}{x}{a} + cos \theta_b \gunit{a}{y}{a} \label{eqn:vect_rot_by} \\
+\gunit{a}{z}{b} &=& \gunit{a}{z}{a} \label{eqn:vect_rot_bz}
+\end{eqnarray}
+Note that when $\theta_b = 0$, $b = a$.
+
+Substituting \ref{eqn:vect_rot_bx}, \ref{eqn:vect_rot_by} , \ref{eqn:vect_rot_bz} into \ref{eqn:vect_rot_b}:
+\begin{eqnarray}
+{\translation{a}{obj,rot}} &=& (r_x cos \theta_b - r_y sin \theta_b)
+\gunit{a}{x}{a} + (r_x sin \theta_b + r_y cos \theta_b) \gunit{a}{y}{a}
++ r_z \gunit{a}{z}{a} \label{eqn:vect_rot_1} \nonumber \\
+\end{eqnarray}
+Expanding \ref{eqn:angle_axis_active}, we have
+\begin{eqnarray}
+{\translation{a}{obj,rot}} &=& r_x cos \theta_b \gunit{a}{x}{a} + r_y cos \theta_b \gunit{a}{y}{a} + r_z cos \theta_b \gunit{a}{z}{a} - \\
+        & & (- r_x \gunit{a}{y}{a} + r_y \gunit{a}{x}{a}) sin \theta_b + \nonumber \\
+        & & r_z (1 - cos \theta_b) \gunit{a}{z}{a} \nonumber \\
+        &=& (r_x cos \theta_b - r_y sin \theta_b) \gunit{a}{x}{a} + 
+(r_x sin \theta_b + r_y cos \theta_b) \gunit{a}{y}{} + r_z \gunit{a}{z}{a}\nonumber \\
+\end{eqnarray}
+which is the same as \ref{eqn:vect_rot_1}.
+
+\ref{eqn:angle_axis_passive} is \ref{eqn:angle_axis_active}, with
+$\theta_b$ replaced by $-\theta_b$, and using the trig identities
+$\cos(-\theta) = \cos(\theta)$, $sin(-\theta) = -sin(\theta)$.
+
+\subsection{Comparison to Kane}
+\ref{eqn:angle_axis_active} corresponds to 1.1(1) in [Kane83]. The
+derivation here follows Kane's.
+
+\section{Quaternion rotation representation}
+\subsection{Reference}
+A rotation quaternion consists of four numbers, where the sum of the
+squares is 1:
+\begin{eqnarray}
+{\bf Q} &=& (Q_x, Q_y, Q_z, Q_s) \\
+1 &=& Q_x^2 + Q_y^2 + Q_z^2 + Q_s^2 \label{eqn:quat_mag_1}
+\end{eqnarray}
+This is a unit quaternion; in general, non-unit quaternions (magnitude
+not restricted to 1) are also useful, but we do not consider them
+here.
+
+The unit quaternion equivalent to the angle axis representation of the
+active rotation \ref{eqn:angle_axis_b} is given by:
+\begin{eqnarray}
+\rotation{a}{b} &=& \quaternion{a}{b} \nonumber \\
+\quaternion{a}{b} &=& (sin (\theta_b/2) \gunit{a}{n}{b}, cos (\theta_b/2)) \nonumber \\
+Q_x     &=& sin (\theta_b/2) n_x \nonumber \\
+Q_y     &=& sin (\theta_b/2) n_y \nonumber \\
+Q_z     &=& sin (\theta_b/2) n_z \nonumber \\
+Q_s     &=& cos (\theta_b/2) \label{eqn:angle_axis_to_quat_active}
+\end{eqnarray}
+$Q_x, Q_y, Qz$ are called the \emph{vector} components; $Q_s$ is
+called the \emph{scalar} component.
+
+The related passive rotation is:
+\begin{eqnarray}
+\quaternion{b}{a} &=& (- sin (\theta_b/2) \gunit{a}{n}{b}, cos (\theta_b/2)) \label{eqn:angle_axis_to_quat_passive}
+\end{eqnarray}
+
+Negating all elements of the quaternion represents the same rotation:
+\begin{eqnarray}
+\rotation{a}{b} &=& (-Q_x, -Q_y, -Q_z, -Q_s) \label{eqn:negate_quat}
+\end{eqnarray}
+
+The inverse of a quaternion is given by:
+\begin{equation}
+\quaternion{b}{a} = \quaternion{a}{b}^{-1} = (-Q_x, -Q_y, -Q_z, Q_s) \label{eqn:inverse_quat}
+\end{equation}
+
+To obtain the angle and axis $(\theta_b, \gunit{a}{n}{b})$ from an
+active quaternion $\quaternion{a}{b}$:
+
+if $Q_s < 0$ then
+\begin{equation}
+{\bf Q} = (-Q_x, -Q_y, -Q_z, -Q_s) \nonumber
+\end{equation}
+end if \\
+\begin{equation}
+s = \sqrt{Q_x^2 + Q_y^2 + Q_z^2} \nonumber
+\end{equation}
+if $s > 0$ then \\
+\begin{eqnarray}
+\theta_b &=& 2 atan2 (s, Q_s) \nonumber \\
+\gunit{a}{n}{b} &=& (Q_x/s, Q_y/s, Q_z/s) \label{eqn:quat_to_angle_axis_active}
+\end{eqnarray}
+else \\
+\begin{eqnarray}
+\theta_b &=& 0 \nonumber \\
+\gunit{a}{n}{b} &=& (1, 0, 0) \nonumber
+\end{eqnarray}
+end if
+
+To multiply a vector by a quaternion ($\gvector{}{r'}{} = \quaternion{}{} \translation{}{}$):
+\begin{eqnarray}
+a  &=& (Q_y r_z - Q_z r_y, Q_z r_x - Q_x r_z, Q_x r_y - Q_y r_x) \nonumber \\
+r'_x &=& 2 (Q_s a_x + Q_y a_z - Q_z a_y) + r_x \nonumber \\
+r'_y &=& 2 (Q_s a_y + Q_z a_x - Q_x a_z) + r_y \nonumber \\
+r'_z &=& 2 (Q_s a_z + Q_x a_y - Q_y a_x) + r_z \label{eqn:quat_times_vect}
+\end{eqnarray}
+If $\quaternion{}{}$ is an active quaternion (ie, it represents an
+active rotation), $\gvector{}{r'}{}$ is a rotated vector:
+\begin{equation}
+\gvector{}{r'}{} = \translation{a}{obj,rot} = \quaternion{a}{b} \translation{a}{obj} 
+\label{eqn:quat_times_vect_active}
+\end{equation}
+If $\quaternion{}{}$ is a passive rotation, $\gvector{}{r'}{}$ is
+$\gvector{}{r}{}$ expressed in a different frame:
+\begin{equation}
+\gvector{}{r'}{} = \translation{b}{obj} = \quaternion{b}{a} \translation{a}{obj}
+\label{eqn:quat_times_vect_passive}
+\end{equation}
+
+To multiply quaternions ($\quaternion{}{3} = \quaternion{}{1} \quaternion{}{2}$):
+\begin{eqnarray}
+Q_{3x} &=& Q_{1y} Q_{2z} - Q_{1z} Q_{2y} + Q_{1s} Q_{2x} + Q_{1x} Q_{2s} \nonumber \\ 
+Q_{3y} &=& - Q_{1x} Q_{2z} + Q_{1s} Q_{2y} + Q_{1z} Q_{2x} + Q_{1y} Q_{2s} \nonumber \\
+Q_{3z} &=& Q_{1s} Q_{2z} + Q_{1x} Q_{2y} - Q_{1y} Q_{2x} + Q_{1z} Q_{2s} \nonumber \\
+Q_{3s} &=& - Q_{1z} Q_{2z} - Q_{1y} Q_{2y} - Q_{1x} Q_{2x} + Q_{1s} Q_{2s} \label{eqn:quat_times_quat}
+\end{eqnarray}
+If the quaternions are active, this represents two successive physical
+rotations:
+\begin{eqnarray}
+\quaternion{a}{3} &=& \quaternion{a}{1} \quaternion{a}{2} \\
+\translation{a}{obj,rot} &=& \quaternion{a}{1} \quaternion{a}{2} \translation{a}{obj}
+\label{eqn:quat_times_quat_active}
+\end{eqnarray}
+If the quaternions are passive, this represents two successive
+coordinate transforms:
+\begin{eqnarray}
+\quaternion{c}{a} &=& \quaternion{c}{b} \quaternion{b}{a} \\
+\translation{c}{obj} &=& \quaternion{c}{b} \quaternion{b}{a} \translation{a}{obj} 
+\label{eqn:quat_times_quat_passive}
+\end{eqnarray}
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.Gen_DOF_3.Unit_Quaternion_Type} implements
+the left-multiply quaternion rotation representation.
+
+A variable representing the quaternion $\rotation{a}{b}$ is written
+\code{A_Quat_B}.
+
+\subsection {Derivations}
+\ref{eqn:angle_axis_to_quat_active} is simply the definition of an
+active left-multiply rotation quaternion. 
+
+\ref{eqn:angle_axis_to_quat_passive} is obtained from
+\ref{eqn:angle_axis_to_quat_active} by substituting $-\theta_b$ for
+$\theta_b$.
+
+To see that \ref{eqn:negate_quat} gives the same rotation, note that
+$Q_i$ always occurs in pairs in \ref{eqn:quat_times_vect}. Thus
+changing the sign of all $Q_i$ has no effect on the rotated vector.
+Also compare this to \ref{eqn:negate_angle_axis}.
+
+Note that we could restrict $Q_s >= 0$. However, enforcing that
+condition in every quaternion operation is inefficient; instead we
+only enforce it where it is useful, such as in conversion to angle axis.
+
+\ref{eqn:inverse_quat} is derived from
+\ref{eqn:angle_axis_inverse_b} and \ref{eqn:negate_quat}. We negate
+the vector components of the quaternion rather than the scalar
+component, because then the inverse operation is the same as the
+\emph{conjugate} operation, used in one formulation of quaternion
+times vector (see \ref{sec:vector_scalar_quaternion}).
+
+\ref{eqn:quat_to_angle_axis_active} is derived from
+\ref{eqn:angle_axis_to_quat_active} using the trig identity $\theta = atan2
+(sin(\theta), cos(\theta))$. $Q_s$ is forced positive so that $\theta_b$
+is in the range $0 <= \theta_b < 2\pi$; otherwise it would be in the
+range $0 <= \theta_b < 4\pi$. \ref{eqn:quat_to_angle_axis_active} is singular
+when $s$ is zero. To see how to handle the singularity, consider the
+quaternion $(\epsilon, 0, 0, 1)$, where $\epsilon$ is the smallest
+number such that $1 + \epsilon <> 1$ to machine precision. Note
+that this satisfies \ref{eqn:quat_mag_1}, since $1 + \epsilon^2 = 1$.
+However, $s = \epsilon$, and \ref{eqn:quat_to_angle_axis_active} is
+well-behaved. Thus there is only a problem when $s$ is identically
+zero. In that case, the magnitude of the rotation is zero, and the
+axis is undetermined, so we simply pick the x axis.
+
+To prove that \ref{eqn:quat_times_vect} is the equation for
+rotating a vector, substitute \ref{eqn:angle_axis_to_quat_active}
+into \ref{eqn:quat_times_vect}, and compare to
+\ref{eqn:angle_axis_active}. See \file{derive_quat_times_vect.maxima}
+for the details. Note that the temporary variable $a$ provides a
+significant optimization; this was first published in [Shoemake85].
+
+To prove that \ref{eqn:quat_times_quat} is the equation for combining
+rotations, we evaluate $({\bf Q_a}{\bf Q_b})\translation{}{}$ and
+${\bf Q_a}({\bf Q_b}\translation{}{})$ using \ref{eqn:quat_times_quat}
+and \ref{eqn:quat_times_vect}, and show they are the same. See
+\file{derive_quat_times_quat.maxima} for the details.
+
+\subsection{Vector Scalar formulation}
+\label{sec:vector_scalar_quaternion}
+The equations for quaternion times quaternion and quaternion times
+vector can also be expressed in pure vector notation, without
+reference to any Cartesian frame.
+
+First, we denote the vector and scalar parts of a quaternion by:
+\begin{eqnarray}
+\quaternion{}{1} &=& (\gvector{}q{1v}, Q_{1s})
+\end{eqnarray}
+
+Then \ref{eqn:quat_times_quat} becomes
+\begin{eqnarray}
+\quaternion{}{3} &=& \quaternion{}{1} \quaternion{}{2} \nonumber \\
+ &=& (\gvector{}q{2v} Q_{1s} + \gvector{}q{1v} Q_{2s} + \gvector{}q{1v}\cross \gvector{}q{2v},\nonumber \\
+ && Q_{1s} Q_{2s} - \gvector{}q{1v} \cdot \gvector{}q{2v})
+\label{eqn:quat_times_quat_vs}
+\end{eqnarray}
+
+To actively rotate a vector in this formulation, form a quaternion (not
+a unit quaternion) from the vector by setting the scalar part to zero.
+Then \ref{eqn:quat_times_vect_active} becomes
+\begin{eqnarray}
+\translation{a}{obj,rot} &=& \quaternion{a}{b} \translation{a}{obj}
+\label{eqn:quat_vect_vs_1} \\
+  &=& \quaternion{a}{b} (\translation{a}{obj}, 0) \quaternion{a}{b}^*
+\label{eqn:quat_times_vect_vs_active}
+\end{eqnarray}
+where $\quaternion{a}{b}^*$ is the \emph{conjugate quaternion}, and is
+the same as $\quaternion{a}{b}^{-1}$. The multiplication operator in
+\ref{eqn:quat_vect_vs_1} is given by \ref{eqn:quat_times_vect}; in
+\ref{eqn:quat_times_vect_vs_active}, it is given by
+\ref{eqn:quat_times_quat_vs}.
+
+Expanding and applying vector and trig identities, this reduces to
+\ref{eqn:angle_axis_active}. See \file{derive_vect_scalar_quat.maxima}
+for details.
+
+Similarly, for a passive rotation, \ref{eqn:quat_times_vect_passive} becomes
+\begin{eqnarray}
+\translation{b}{obj} &=& \quaternion{b}{a} \translation{a}{obj} \nonumber \\
+  &=& \quaternion{b}{a} (\translation{a}{obj}, 0) \quaternion{b}{a}^*
+\label{eqn:quat_times_vect_vs_passive}
+\end{eqnarray}
+
+When combining rotations, as in \ref{eqn:generic_multi_passive}, this is:
+\begin{eqnarray}
+\quaternion{c}{a} &=& \quaternion{c}{b} \quaternion{b}{a} \nonumber \\
+\translation{c}{obj} &=& \quaternion{c}{a} (\translation{a}{obj}, 0) \quaternion{c}{a}^* \nonumber \\
+\translation{c}{obj} &=& \quaternion{c}{b} \quaternion{b}{a} (\translation{a}{obj}, 0) 
+\quaternion{b}{a}^* \quaternion{c}{b}^*
+\label{eqn:quat_times_quat_vs_passive}
+\end{eqnarray}
+
+\subsection{Comparison to Kane}
+[Kane83] calls quaternion components `Euler parameters', with symbol
+$\epsilon$. Set $Q_x = \epsilon_1, Q_y = \epsilon_2,Q_z =
+\epsilon_3,Q_s = \epsilon_4$ to obtain our notation. 
+
+\ref{eqn:angle_axis_to_quat_active} is equivalent to [Kane83]
+1.2(1)-(2); both are active rotations.
+
+\ref{eqn:quat_times_vect_active} is equivalent to [Kane83] 1.3(21). 
+See \file{derive_quat_times_vect_kane.maxima} for details.
+
+\ref{eqn:quat_times_quat_active} is the same as [Kane83] 1.6(12). 
+
+\subsection{Comparison to Wertz}
+\ref{eqn:quat_times_quat_vs} is the same as [Wertz78] (D-8), with
+\begin{eqnarray}
+\wertzquat{''} &=& \quaternion{}{3} \nonumber \\
+\wertzquat{} &=& \quaternion{}{1} \nonumber \\
+\wertzquat{'} &=& \quaternion{}{2} \nonumber 
+\end{eqnarray}
+
+\ref{eqn:quat_times_vect_vs_passive} is equivalent to [Wertz78]
+(D-11), with ${\bf U}' = \translation{b}{obj}, {\bf U} = \translation{a}{obj}, \wertzquat{} = \quaternion{b}{a}^{-1}$.
+Thus (D-11) is equivalent to \ref{eqn:quat_times_vect_passive}, if
+we set:
+\begin{eqnarray}
+Q_x &=& -q_1 \nonumber \\
+Q_y &=& -q_2 \nonumber \\
+Q_z &=& -q_3 \nonumber \\
+Q_s &=& q_4 \label{eqn:wertz_to_us}
+\end{eqnarray}
+See \file{derive_quat_times_vect_wertz.maxima} for detailed proof.
+
+Now consider combining passive rotations, as in
+\ref{eqn:quat_times_quat_vs_passive}. In Wertz's notation, this
+becomes:
+\begin{eqnarray}
+\wertzquat{''} &=& \wertzquat{} \wertzquat{'} \nonumber \\
+{\bf U}'' &=& \wertzquat{''}^* {\bf U} \wertzquat{''} \nonumber \\
+{\bf U}'' &=& \wertzquat{'}^* \wertzquat{}^* {\bf U} \wertzquat{} \wertzquat{'} \nonumber 
+\end{eqnarray}
+Thus, in our notation, $\quaternion{c}{b}$ is the second passive
+rotation, and is on the left, while in Wertz, $\wertzquat{'}$ is the
+second passive rotation, and is on the right. This corresponds to
+whether the non-conjugate is on the left or the right in
+\ref{eqn:quat_times_vect_vs_passive}. We use the left-multiply convention
+for quaternions; Wertz uses the right-multiply convention.
+
+\ref{eqn:angle_axis_to_quat_passive} is equivalent to [Wertz78]
+(12-11a) - (12-11d), with \ref{eqn:wertz_to_us} and $\phi = \theta_b$;
+both are passive rotations. Alternately, we can set $\phi = -
+\theta_b$. Note that Wertz does not carefully define the direction of
+$\phi$.
+
+\section{Matrix rotation representation}
+\subsection{Reference}
+A rotation matrix is a 3 by 3 orthonormal matrix, with determinant +1.
+
+The inverse of a rotation matrix is given by the transpose:
+\begin{eqnarray}
+\gmatrix{}M{}^{-1} &=& \gmatrix{}M{}^T 
+\end{eqnarray}
+
+The rotation matrix $\gmatrix{a}M{b}$ equivalent to the active angle axis rotation
+defined in \ref{eqn:angle_axis_b} is given by:
+\begin{equation}
+\gmatrix{a}M{b} = \\
+    \left[
+        \begin{tabular}{ccc}
+        % row 1
+            $cos \theta_b + n_x^2 vers \theta_b$ &
+            $n_z sin \theta_b + n_x n_y vers \theta_b$ &
+            $- n_y sin \theta_b + n_x n_z vers \theta_b$ \\
+        % row 2
+            $- n_z sin \theta_b + n_x n_y vers \theta_b$ &
+            $cos \theta_b + n_y^2 vers \theta_b$ &
+            $n_x sin \theta_b + n_y n_z vers \theta_b$ \\
+        % row 3
+            $n_y sin \theta_b + n_x n_z vers \theta_b$ &
+            $- n_x sin \theta_b + n_y n_z vers \theta_b$ & 
+            $cos \theta_b + n_z^2 vers \theta_b$
+        \end{tabular}
+    \right]
+\label{eqn:angle_axis_to_rot_mat}
+\end{equation}
+where $vers \theta_b = 1 - cos \theta_b$. 
+
+To obtain the angle axis from an active rotation matrix:
+\begin{eqnarray}
+a &=& \frac {\sqrt{(M_{xy} - M_{yx})^2 + (M_{zx} - M_{xz})^2 + (M_{yz} - M_{zy})^2}}{2} \nonumber\\
+b &=& \frac {M_{xx} + M_{yy} + M{zz} - 1}{2} \nonumber \\
+\theta_b &=& atan2 (a, b) \nonumber
+\end{eqnarray}
+if $a <> 0$ then 
+\begin{eqnarray}
+\gunit{a}{n}{b} &=& \frac {(M_{yz} - M_{zy}, M_{zx} - M_{xz}, M_{xy} - M_{yx})}{2 a}
+\label{eqn:rot_mat_to_angle_axis}
+\end{eqnarray}
+else 
+\begin{eqnarray}
+\gunit{a}{n}{b} &=& (1, 0, 0) \nonumber
+\end{eqnarray}
+
+To obtain the active rotation matrix $\gmatrix{a}M{b}$ equivalent to
+the active unit quaternion $\quaternion{a}{b}$:
+\begin{eqnarray}
+\gmatrix{a}M{b} &=&
+    \left[
+        \begin{tabular}{ccc}
+        % row x
+            $1 - 2 Q_z^2 - 2 Q_y^2$ &
+            $2 Q_x Q_y - 2 Q_s Q_z$ &
+            $2 Q_x Q_z + 2 Q_s Q_y$ \\
+        % row y
+            $2 Q_s Q_z + 2 Q_x Q_y$ &
+            $1 - 2 Q_z^2 - 2 Q_x^2$ &
+            $2 Q_y Q_z - 2 Q_s Q_x$ \\
+        % row z
+            $2 Q_x Q_z - 2 Q_s Q_y$ &
+            $2 Q_y Q_z + 2 Q_s Q_x$ &
+            $1 - 2 Q_y^2 - 2 Q_x^2$
+        \end{tabular}
+    \right] \nonumber
+    \label{eqn:quat_to_rot_mat} \\
+\end{eqnarray}
+
+To obtain the active quaternion $\quaternion{a}{b}$ from the active
+rotation matrix $\gmatrix{a}M{b}$:
+\begin{eqnarray}
+a &=& M_{xx} + M_{yy} + M_{zz} \nonumber \label{eqn:rot_mat_to_quat} \\
+b &=& M_{xx} - M_{yy} - M_{zz} \nonumber\\
+c &=& - M_{xx} + M_{yy} - M_{zz} \nonumber\\
+d &=& - M_{xx} - M_{yy} + M_{zz}
+\end{eqnarray}
+
+if $a > max (b, max (c, d))$ then
+\begin{eqnarray}
+e &=& 2 \sqrt{1 + a}\nonumber \\
+Q_x &=& \frac{M_{zy} - M_{yz}} {e} \nonumber \\
+Q_y &=& \frac{M_{xz} - M_{zx}} {e} \nonumber \\
+Q_z &=& \frac{M_{yx} - M_{xy}} {e} \nonumber \\
+Q_s &=& \frac{e}{4} \nonumber
+\end{eqnarray}
+elsif $b > max (a, max (c, d))$ then
+\begin{eqnarray}
+e &=& 2 \sqrt{1 + b}\nonumber \\
+Q_x &=& \frac{e}{4}\nonumber \\
+Q_y &=& \frac{M_{xy} + M_{yx}}{e}  \nonumber\\
+Q_z &=& \frac{M_{xz} + M_{zx}}{e} \nonumber\\
+Q_s &=& \frac{M_{zy} - M_{yz}}{e} \nonumber
+\end{eqnarray}
+elsif $c > max (a, max (b, d))$ then
+\begin{eqnarray}
+e &=& 2 \sqrt{1 + c} \nonumber \\
+Q_x &=& \frac{M_{xy} + M_{yx}}{e} \nonumber\\
+Q_y &=& \frac{e}{4} \nonumber\\
+Q_z &=& \frac{M_{yz} + M_{zy}}{e} \nonumber\\
+Q_s &=& \frac{M_{xz} - M_{zx}}{e} \nonumber
+\end{eqnarray}
+else
+\begin{eqnarray}
+e &=& 2 \sqrt{1 + d} \nonumber \\
+Q_x &=& \frac{M_{xz} + M_{zx}}{e} \nonumber\\
+Q_y &=& \frac{M_{yz} + M_{zy}}{e} \nonumber\\
+Q_z &=& \frac{b}{4} \nonumber\\
+Q_s &=& \frac{M_{yx} - M_{xy}}{e} \nonumber
+\end{eqnarray}
+end if
+
+To rotate a vector using a rotation matrix, use normal matrix multiply:
+\begin{equation}
+\gvector{}{r'}{} = \gmatrix{}M{} \gvector{}{r}{}
+\label{eqn:rot_mat_times_vect}
+\end{equation}
+If $\gmatrix{}M{}$ is an active matrix (ie, it represents an
+active rotation), $\gvector{}{r'}{}$ is a rotated vector:
+\begin{equation}
+\gvector{}{r'}{} = \translation{a}{obj,rot} = \gmatrix{a}M{b} \translation{a}{obj} 
+\label{eqn:rot_mat_times_vect_active}
+\end{equation}
+If $\gmatrix{}M{}$ is a passive rotation, $\gvector{}{r'}{}$ is
+$\gvector{}{r}{}$ expressed in a different frame:
+\begin{equation}
+\gvector{}{r'}{} = \translation{b}{obj} = \gmatrix{b}M{a} \translation{a}{obj}
+\label{eqn:rot_mat_times_vect_passive}
+\end{equation}
+
+To multiply rotation matrices, use normal matrix multiply:
+\begin{equation}
+\gmatrix{}M{c} = \gmatrix{}M{a} \gmatrix{}M{b} \label{eqn:rot_mat_times_rot_mat}
+\end{equation}
+If the matrices are active, this represents two successive physical
+rotations:
+\begin{equation}
+\translation{a}{obj,rot} = \gmatrix{a}M{b} \gmatrix{a}M{c} \translation{a}{obj}
+\label{eqn:rot_mat_times_rot_mat_active}
+\end{equation}
+If the matrices are passive, this represents two successive
+coordinate transforms:
+\begin{equation}
+\translation{c}{obj} = \gmatrix{c}M{b} \gmatrix{b}M{a} \translation{a}{obj} 
+\label{eqn:rot_mat_times_rot_mat_passive}
+\end{equation}
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.Gen_DOF_3.Rot_Matrix_Type} implements the
+left-multiply orthonormal matrix rotation representation.
+
+\subsection {Derivations}
+\ref{eqn:rot_mat_times_vect} is simply the definition of matrix
+multiplication. 
+
+\ref{eqn:rot_mat_times_rot_mat} is the correct way to combine
+rotations, because of the associativity of matrix multiply.
+
+\ref{eqn:angle_axis_to_rot_mat} is derived from \ref{eqn:angle_axis_active} by
+finding the coefficient matrix for $r_{roti}$; see \\
+\file{derive_angle_axis_to_rot_matrix.maxima} for details.
+
+To derive \ref{eqn:rot_mat_to_angle_axis}, start with
+\ref{eqn:angle_axis_to_rot_mat}, take various combinations of $M_{ij}$,
+and use \ref{eqn:n_mag_1}. See
+\file{derive_rot_matrix_to_angle_axis.maxima} for details.
+\begin{eqnarray}
+M_{xy} - M_{yx} &=& 2 n_z sin (\theta) \label{eqn:rot_mat_to_angle_axis_1}\\
+M_{zx} - M_{xz} &=& 2 n_y sin (\theta) \label{eqn:rot_mat_to_angle_axis_2}\\
+M_{yz} - M_{zy} &=& 2 n_x sin (\theta) \label{eqn:rot_mat_to_angle_axis_3}\\
+M_{xx} + M_{yy} + M{zz} &=& 3 cos (\theta) + (n_x^2 + n_y^2 + n_z^2) vers (\theta) \nonumber \\
+&=& 1 + 2 cos (\theta)\label{eqn:rot_mat_to_angle_axis_4}
+\end{eqnarray}
+Now we can find $\theta$ from \ref{eqn:rot_mat_to_angle_axis_1},
+\ref{eqn:rot_mat_to_angle_axis_2}, \ref{eqn:rot_mat_to_angle_axis_3}, and
+\ref{eqn:rot_mat_to_angle_axis_4}:
+\begin{eqnarray}
+sin (\theta) &=& \frac {\sqrt{(M_{xy} - M_{yx})^2 + (M_{zx} - M_{xz})^2 + (M_{yz} - M_{zy})^2}, 2} \nonumber\\
+cos (\theta) &=& \frac {M_{xx} + M_{yy} + M{zz} - 1}{2} \nonumber \\
+\theta &=& atan2 (sin (\theta), cos (\theta))
+\end{eqnarray}
+Note we have chosen $\sin (\theta) >= 0$, so we have $0 <= \theta <
+\pi$. The axis ${\bf n}$ is found by:
+\begin{eqnarray}
+\gunit{}{n}{} &=& \frac {(M_{yz} - M_{zy}, M_{zx} - M_{xz}, M_{xy} - M_{yx})}{2 sin (\theta)} \label{eqn:rot_mat_to_angle_axis_n}
+\end{eqnarray} 
+This is singular when $sin (\theta) = 0$. Consider $\theta =
+\epsilon$; then $\cos (theta) = 1$, $\sin (theta) = \epsilon$, and
+\ref{eqn:rot_mat_to_angle_axis_n} becomes:
+\begin{eqnarray}
+\gunit{}{n}{} &=& \frac {(2 n_x \epsilon, 2 n_y \epsilon, 2 n_z \epsilon)}{2 \epsilon}
+\end{eqnarray} 
+This is well behaved unless $\sin (\theta)$ is exactly zero. In that
+case, the axis is indeterminate, so we simply choose the x axis.
+
+To derive \ref{eqn:quat_to_rot_mat}, start with
+\ref{eqn:quat_times_vect}, and find the coefficients of each vector
+component; see \file{derive_quat_to_rot_matrix.maxima}.
+
+To derive \ref{eqn:rot_mat_to_quat}, start with the diagonal
+elements of \ref{eqn:quat_to_rot_mat}, and \ref{eqn:quat_mag_1};
+this gives us four equations in the four unknowns $Q_i^2$. We solve
+for one of them (call it $Q_j$); then we can take various combinations
+of $M_ij$ and divide by $Q_j$ to find the remaining $Q_i$. We want the
+largest magnitude divisor, to avoid singularities. So first we need to
+decide which divisor is the largest. See
+\file{derive_rot_matrix_to_quat.maxima} for full details.
+\begin{eqnarray}
+1 &=& Q_s^2 + Q_x^2 + Q_y^2 + Q_z^2 \nonumber\\
+M_{xx} & =& 1 - 2 Q_z^2 - 2 Q_y^2 \nonumber\\
+M_{yy} & =& 1 - 2 Q_z^2 - 2 Q_x^2 \nonumber\\
+M_{zz} & =& 1 - 2 Q_y^2 - 2 Q_x^2
+\end{eqnarray}
+
+To solve for $Q_s$:
+\begin{eqnarray}
+M_{xx} + M_{yy} + M_{zz} & = & 1 - 2 Q_z^2 - 2 Q_y^2 + \nonumber       \\
+                         &   & 1 - 2 Q_z^2 - 2 Q_x^2 + \nonumber       \\
+                         &   & 1 - 2 Q_y^2 - 2 Q_x^2 \nonumber         \\ 
+                         & = & 3 - 4 (Q_x^2 + Q_y^2 + Q_z^2) \nonumber \\
+                         & = & 3 - 4 (1 - Q_s^2) \nonumber             \\
+                         & = & - 1 + 4 Q_s^2 \nonumber                 \\
+Q_s                      & = & \sqrt{\frac{1 + M_{xx} + M_{yy} + M_{zz}}{4}}
+\end{eqnarray}
+
+To solve for $Q_x$:
+\begin{eqnarray}
+M_{xx} - M_{yy} - M_{zz} & = & 1 - 2 Q_z^2 - 2 Q_y^2 - \nonumber    \\
+                         &   & 1 + 2 Q_z^2 + 2 Q_x^2 - \nonumber    \\
+                         &   & 1 + 2 Q_y^2 + 2 Q_x^2 \nonumber      \\ 
+                         & = & -1 + 4 Q_x^2 \nonumber               \\ 
+Q_x                      & = & \sqrt{\frac{1 + M_{xx} - M_{yy} - M_{zz}}{4}}
+\end{eqnarray}
+$Q_y$ and $Q_z$ are similar. Thus to pick the largest magnitude
+divisor, we find the maximum of the four combinations of $M_{ii}$:
+\begin{eqnarray}
+a                        & = & M_{xx} + M_{yy} + M_{zz} \nonumber   \\
+b                        & = & M_{xx} - M_{yy} - M_{zz} \nonumber   \\
+c                        & = & - M_{xx} + M_{yy} - M_{zz} \nonumber \\
+d                        & = & - M_{xx} - M_{yy} + M_{zz} 
+\end{eqnarray}
+
+Now we can take various combinations of $M_ij$ and divide by $Q_j$.
+For example, to find $Q_x$ when we have $Q_s$:
+\begin{eqnarray}
+M_{zy} - M_{yz} &=& 2 Q_y Q_z + 2 Q_s Q_x - (2 Q_y Q_z - 2 Q_s Q_x) \nonumber \\
+ &=& 4 Q_s Q_x \nonumber \\
+Q_x &=& \frac{M_{zy} - M_{yz}}{4 Q_s}
+\end{eqnarray}
+Similarly for the other $Q_i$. Note we can save some computations by first
+computing $4Q_j$ instead of $Q_j$.
+
+\subsection{Comparison to Kane}
+\ref{eqn:rot_mat_times_vect_passive} corresponds to [Kane83] 1.2(9):
+\begin{equation}
+^Bv =\ ^Av \ ^AC^B \nonumber
+\end{equation}
+However, Kane uses the right-multiply convention for matrices. Thus
+$^AC^B$ is related to our notation by $\gvector{b}M{a} =\ ^AC^B$.
+
+\ref{eqn:angle_axis_to_rot_mat} corresponds to [Kane83] 1.2(23)-(31).
+However, $C$ in Kane is a passive matrix correspding to an active
+angle axis rotation, using the right-multiply
+convention, while $\gmatrix{a}M{b}$ is an active matrix using the
+left-multiply convention. These two differences cancel, and we have
+$\gmatrix{a}M{b} = C$.
+
+\ref{eqn:quat_to_rot_mat} is similar to [Kane83] 1.3(6)-(14). However,
+Kane's $C$ is a right-multiplying passive matrix, while our
+$\gmatrix{a}M{b}$ is a left-multiply active matrix. The quaternions
+are the same. Thus we have $C = \gmatrix{a}M{b}$.
+
+\ref{eqn:rot_mat_to_quat} is similar to [Kane83] 1.3(6)-(14). In
+addition to the differences in the matrix convention, Kane does not
+consider the singularity.
+
+Similarly, \ref{eqn:rot_mat_times_rot_mat_passive} is similar to
+[Kane83] 1.6(4).
+
+\subsection{Comparison to Wertz}
+\ref{eqn:rot_mat_times_vect_passive} is the same as [Wertz78] (12-4).
+Note that Wertz's notation does not include frames.
+
+\ref{eqn:angle_axis_to_rot_mat} corresponds to [Wertz78] (12-7a), with
+$\phi = \theta_b$.
+
+\ref{eqn:rot_mat_to_angle_axis} is similar to [Wertz78] (12-9) -
+(12-10c), but Wertz does not consider the singularity.
+
+\ref{eqn:quat_to_rot_mat} is equivalent to [Wertz78] (12-13a), with
+\ref{eqn:wertz_to_us}. Note that Wertz's $\wertzquat{}$ is
+right-multiply, while our $\quaternion{a}{b}$ is left-multiply; the
+matrices are both left-multiply.
+
+\ref{eqn:rot_mat_to_quat} is equivalent to [Wertz78] (12-14a) -
+12-14d), with \ref{eqn:wertz_to_us}, and we have slightly optimized
+the handling of the singularity.
+
+\section{Other rotation representations}
+\subsection{Reference}
+Another representation is the rotation vector:
+\begin{equation}
+{\bf R} = \theta * {\gunit{}{n}{}}
+\end{equation}
+This is useful mainly for differential rotations, since then the
+rotation vectors can simply be added.
+
+To find the rotation vector from a quaternion or rotation matrix,
+first find the angle and axis, then multiply. Similarly, to find a
+quaternion or rotation matrix from a rotation vector, find $\theta$
+from the magnitude of the rotation vector, then find $\gunit{}{n}{}$
+by dividing, then convert the angle axis to the quaternion or rotation
+matrix. 
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.DOF_3.Cart_Vector_Type} is used for the
+rotation vector representation; there are functions to convert
+between rotation vectors and quaternions.
+
+\chapter{6 DOF}
+The 6 degrees of freedom of a body (position and orientation) can be
+represented in one mathematical object called a ``pose''.
+
+Similarly, the force and torque are represented by an object called a
+``wrench''.
+
+\section{Poses}
+\subsection{Reference}
+
+The pose of an object relative to a base frame is represented by the
+transform $\transform{base}{obj}$ from the base frame to a frame fixed
+in the object. The base frame is also the reference frame for
+expressing the components of the transform. When used in this way, the
+transform is also called a pose. The translation is done first, then
+the rotation. To express the translation and rotation parts of a pose,
+we use the notation:
+\begin{equation}
+\transform{ref}{obj} = \transformsplit{ref}{obj}
+\end{equation}
+A pose relative to one reference frame can be transformed to another
+reference frame :
+\begin{eqnarray}
+\transform{a}{c} &=& \transformsplit{a}{c} \nonumber \\
+    &=& \transform{a}{b} \transform{b}{c} \nonumber \\
+    &=& (\translation{a}{b} + \rotation{a}{b} \translation{b}{c}, \rotation{a}{b}\rotation{b}{c})
+\end{eqnarray}
+A differential pose can be represented by a dual Cartesian vector; the
+differential unit quaternion is converted to a rotation vector. The conversion
+of a pose to a dual Cartesian vector is represented by the function $DCV$, and
+its inverse by $POSE$:
+\begin{eqnarray}
+\cartpose{base}{obj} &=& DCV (\transform{base}{obj}) \\
+\transform{base}{obj} &=& POSE (\cartpose{base}{obj})
+\end{eqnarray}
+\subsection {Coding}
+The type \code{SAL.Gen_Math.DOF_6.Pose_Type} implements the pose
+representation.
+
+\subsection {Derivations}
+
+\section{Rate}
+\subsection{Reference}
+
+The time rate of change of pose of an object is simply called the
+``rate'' of an object. It is defined by the rate of a frame (called
+the {\em velocity} frame; not necessarily the object frame) rigidly
+attached to the object. An object rate is measured relative to a base
+frame, and is expressed in a reference frame. To indicate all these
+frames, we use the notation ${^{ref}_{base}{\bf \dot{p}}_{vel}}$.
+Usually, the base frame is not significant or can be inferred from
+context, and is not specified.
+
+To find the velocity in a frame $b$ at one point on a rigid body when given the
+velocity in a frame $a$ at another point, and the transform $\transform{a}{b}$
+from frame $a$ to frame $b$:
+\begin{eqnarray}
+\label{eqn:Transform velocity}
+\cartrate{b}{b} &=& \rotation{a}{b}^{-1} (\tranvel{a}{a} - \translation{a}{b} \cross \rotvel{a}{a}; \rotvel{a}{a})
+\end{eqnarray}
+This operation is called a {\em velocity transform}, and represented by
+$\trsfvel{}{}$:
+\begin{eqnarray}
+\cartrate{b}{b} &=& \trsfvel{b}{a} \hspace*{3pt} \cartrate{a}{a}
+\end{eqnarray}
+where:
+\begin{eqnarray}
+\trsfvel{b}{a} &=&
+    \left[
+        \begin{tabular}{cc}
+            $\rotation{a}{b}^{-1}$ & $ - \rotation{a}{b}^{-1}\hspace*{3pt} ^a{\bf p}_{b \cross}$ \\
+            {\bf 0 }          & $\rotation{a}{b}^{-1}$
+        \end{tabular}
+    \right] \\
+^a{\bf p}_{b \cross} &=&
+    \left[
+        \begin{tabular}{ccc}
+            0 & $-p_z$ & $p_y$ \\
+            $p_z$ & 0 & $-p_x$ \\
+            $-p_y$ & $p_x$ & 0 \\
+        \end{tabular}
+    \right] 
+\end{eqnarray}
+Note that the reference frame must be the same as the velocity frame for the
+velocity transform operation to be defined. The notation helps get the frames correct;
+the post-subscript must match the pre-superscript for the equation to make
+sense. Note that $ \rotation{b}{a} \hspace{3pt} ^a{\bf p}_{b \cross} \not=
+\hspace*{3pt} ^b{\bf p}_{a \cross}$, which is why we need $\transform{a}{b}$,
+not $\transform{b}{a}$. This can easily lead to confusion when combining
+propagators: $\trsfvel{c}{a} = \trsfvel{c}{b}\trsfvel{b}{a}$ is built from
+$\transform{a}{c} = \transform{a}{b}\transform{b}{c}$; the multiplication order
+seems backwards, but it isn't.
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.DOF_6.Rate_Transform_Type} implements 
+rate transforms.
+
+\subsection {Derivations}
+
+\section{Wrench}
+\subsection{Reference}
+
+The wrench on an object is measured at a wrench frame (not necessarily
+the object frame), and expressed in a reference frame. Wrenches are
+denoted by $\wrench{ref}{wrench;label}$.
+
+To find the wrench in a frame $b$ at one point on a rigid body when given the
+wrench in a frame $a$ at another point, and the transform $\transform{a}{b}$
+from frame $a$ to frame $b$: 
+\begin{eqnarray}
+\label{eqn:Transform wrench}
+\wrench{b}{b} &=& \rotation{a}{b}^{-1} (\force{a}{a}; 
+    \torque{a}{a} - \translation{a}{b} \cross \force{a}{a})
+\end{eqnarray}
+This operation is called a {\em wrench transform}, and represented by
+$\trsfwrench{}{}$:
+\begin{eqnarray}
+\wrench{b}{b} &=& \trsfwrench{b}{a} \hspace*{3pt} \wrench{a}{a}
+\end{eqnarray}
+where:
+\begin{eqnarray}
+\trsfwrench{b}{a} &=&
+    \left[
+        \begin{tabular}{cc}
+            $\rotation{a}{b}^{-1}$ & 0 \\
+            $ - \rotation{a}{b}^{-1}\hspace*{3pt} ^a{\bf p}_{b \cross}$ & $\rotation{a}{b}^{-1}$
+        \end{tabular}
+    \right]
+\end{eqnarray}
+Note that the reference frame must be the same as the wrench frame for the
+wrench transform operation to be defined.
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.DOF_6.Wrench_Transform_Type} implements 
+wrench transforms.
+
+\subsection {Derivations}
+
+\section{Mass and Inertia}
+\subsection{Reference}
+
+The zeroth, first and second mass moments of an object about a mass frame,
+expressed in a reference frame, give the total mass $m_{obj}$, the center of mass
+$\translation{ref}{mass,cm}$, and the inertia $\inertia{ref}{mass,obj}$. $\inertia{}{}$
+is symmetric, so we define the six elements:
+\begin{equation}
+\inertia{}{} =
+    \left[
+        \begin{tabular}{ccc}
+            $I_{xx}$ & $I_{xy}$ & $I_{xz}$ \\
+            $I_{xy}$ & $I_{yy}$ & $I_{yz}$ \\
+            $I_{xz}$ & $I_{yz}$ & $I_{zz}$   
+        \end{tabular}
+    \right]
+\end{equation}
+Note that normally the mass and reference frames are identical; we keep them
+separate here for clarity. There is no general formula for how the inertia
+changes when the mass frame is changed by a transform. However, if we are given
+the inertia about the center of mass frame $cm$, we can find it about another
+frame $a$ using the parallel axis theorem:
+\begin{eqnarray} \inertia{a}{cm} &=& \rotation{a}{cm} \inertia{cm}{cm} \rotation{a}{cm}^{-1} \\ 
+^{a}I_{a,xx} &=& ^{a}I_{cm,xx} + m (^{a}p_{cm,y}^2 + \hspace*{3pt}^{a}p_{cm,z}^2) \nonumber \\
+^{a}I_{a,yy} &=& ^{a}I_{cm,yy} + m (^{a}p_{cm,z}^2 + \hspace*{3pt}^{a}p_{cm,x}^2) \nonumber \\ 
+^{a}I_{a,zz} &=& ^{a}I_{cm,zz} + m (^{a}p_{cm,x}^2 + \hspace*{3pt}^{a}p_{cm,y}^2) \nonumber \\ 
+^{a}I_{a,xy} &=& ^{a}I_{cm,xy} + m {}^{a}p_{cm,x} {}^{a}p_{cm,y} \nonumber \\ 
+^{a}I_{a,xz} &=& ^{a}I_{cm,xz} + m {}^{a}p_{cm,x} {}^{a}p_{cm,z} \nonumber \\ 
+^{a}I_{a,yz} &=& ^{a}I_{cm,yz} + m {}^{a}p_{cm,y} {}^{a}p_{cm,z}
+\end{eqnarray} 
+
+This operation is implemented by the function $ParAxis(m, \translation{}{cm},
+\inertia{cm}{cm})$.
+
+We define the mass 3-tuple $\mass{a}{} \equiv \{m, \translation{a}{cm},
+\inertia{a}{cm}\}$ to contain the total mass, the center of mass relative to the
+object frame, and the inertia about the center of mass. To add two masses
+$\mass{a}{1}$, $\mass{b}{2}$ together, we need the frame $\transform{a}{b}$
+giving the location of b relative to a. Then the mass of the combined object
+$\mass{a}{3}$ is given by the function $add$:
+\begin{eqnarray}
+\mass{a}3 &=& add (\mass{a}{1}, \mass{b}{2}, \transform{a}{b}) \\
+    &=& \{ m_1 + m_2, \nonumber\\
+    && ( m_1 \translation{a}{cm;1} + m_2 \transform{a}{b} \translation{b}{cm;2}) / m_3, \nonumber \\
+    && ParAxis (m_1, \translation{a}{cm;3} - \translation{1}{cm;1}, \inertia{cm_1}{1}) \nonumber \\
+    & & + ParAxis (m_2, \translation{a}{cm;3} - \transform{a}{b}
+    \translation{b}{cm;2}, \rotation{a}{b}\inertia{cm_2}{2}) \}
+\end{eqnarray}
+
+\subsection {Coding}
+The type \code{SAL.Gen_Math.DOF_6.Mass_Type} implements 
+the mass tuple. The type \code{SAL.Gen_Math.DOF_6.CM_Mass_Type}
+implements a simplified mass tuple, where the reference frame is
+always the center of mass.
+
+\subsection {Derivations}
+
+\end{document}

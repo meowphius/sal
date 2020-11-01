@@ -1,0 +1,32 @@
+/* Derivations for spacecraft_math.tex: eqn:rot_matrix_to_angle_axis */
+linel : 120$
+FILE_SEARCH_MAXIMA : append (["./###.{maxima}"], FILE_SEARCH_MAXIMA)$
+
+batch ("math_util");
+
+/* eqn:angle_axis_to_mat */
+vers (theta) := 1 - cos(theta)$
+M : expand (
+[[cos (theta) + n_x^2 * vers (theta),
+  n_z * sin (theta) + n_x * n_y * vers (theta),
+  - n_y * sin (theta) + n_x * n_z * vers (theta)],
+ [- n_z * sin (theta) + n_x * n_y * vers (theta),
+  cos (theta) + n_y^2 * vers (theta),
+  n_x * sin (theta) + n_y * n_z * vers (theta)],
+ [n_y * sin (theta) + n_x * n_z * vers (theta),
+  - n_x * sin (theta) + n_y * n_z * vers (theta),
+  cos (theta) + n_z^2 * vers (theta)]])$
+
+a : M[1][2] - M[2][1];
+b : M[3][1] - M[1][3];
+c : M[2][3] - M[3][2];
+
+d : M[1][1] + M[2][2] + M[3][3];
+d : ratsubst (n_x^2, 1 - n_y^2 - n_z^2, d);
+
+e : sqrt (a^2 + b^2 + c^2);
+e : ratsubst (n_x^2, 1 - n_y^2 - n_z^2, e);
+e : ratsubst (sin(theta), abs(sin(theta)), e);
+
+n : [a, b, c]/e;
+/* end of file */

@@ -1,0 +1,253 @@
+% notation for math entities and other things in GSFC Flight Software Branch documents.
+% Listed in command alphabetical order.
+
+\newcommand{\cartaccoft}[3] % {time}{coordinate_frame}{vel_frame; label}
+% generate notation for a Cartesian acceleration as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}{\bf \ddot{p}}(#1)_{#3}}
+
+\newcommand{\cartaccoftj}[4] % {time}{coordinate_frame}{vel_frame; label}{index}
+% generate notation for a Cartesian acceleration element as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}\ddot{p}(#1)_{#3,#4}}
+
+\newcommand{\cartpose}[2] % {coordinate_frame}{object_frame}
+% generate notation for a differential pose. Math mode only.
+    {{}^{#1}{\bf p}_{#2}}
+
+\newcommand{\cartposeofs}[3] % {s/z}{coordinate_frame}{object_frame}
+% generate notation for a differential pose as a function of s (frequency domain). Math mode only.
+    {{}^{#2}{\bf P}(#1)_{#3}}
+
+\newcommand{\cartposeoft}[3] % {time}{coordinate_frame}{object_frame}
+% generate notation for a differential pose as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}{\bf p}(#1)_{#3}}
+
+\newcommand{\cartposeoftj}[4] % {time}{coordinate_frame}{object_frame}{index}
+% generate notation for a differential pose element as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}p(#1)_{#3,#4}}
+
+\newcommand{\cartposeofsj}[4] % {s/z}{coordinate_frame}{object_frame}{index}
+% generate notation for a differential pose element as a function of s (frequency domain). Math mode only.
+    {{}^{#2}P(#1)_{#3,#4}}
+
+\newcommand{\cartrate}[2] % {coordinate_frame}{vel_frame; label}
+% generate notation for a Cartesian rate. Math mode only.
+    {{}^{#1}{\bf \dot{p}}_{#2}}
+
+\newcommand{\cartrateoft}[3] % {time}{coordinate_frame}{vel_frame; label}
+% generate notation for a Cartesian rate as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}{\bf \dot{p}}(#1)_{#3}}
+
+\newcommand{\cartrateoftj}[4] % {time}{coordinate_frame}{vel_frame; label}{index}
+% generate notation for a Cartesian rate element as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}\dot{p}(#1)_{#3,#4}}
+
+\newcommand{\cross}
+% cross product symbol
+    {\times}
+
+\newcommand{\enumeral}[1] % {text}
+% set style of text argument to indicate that it is an enumeral
+    {{\bf #1}}
+
+\newcommand{\force}[2] % {coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian force. Math mode only.
+    {{}^{#1}{\bf f}_{#2}}
+
+\newcommand{\forwdkin}[1] % {manipulator}
+% generate syntax for the forward kinematics function for a manipulator.
+    {\mbox{$\lambda _{#1}(${\boldmath $\theta$}$_{#1})$}}
+
+\newcommand{\gmatrix}[3] % {coordinate_frame}{symbol}{label}
+% generate notation for a general matrix (something in latex already
+% defines \matrix). Math mode only.
+{{}^{#1}{\bf #2}_{#3}}
+
+\newcommand{\gvector}[3] % {coordinate_frame}{letter}{object}
+% generate notation for a general vector (something in latex already
+% defines \vector). Math mode only.
+{{}^{#1} {\bf #2}_{#3}}
+
+\newcommand{\gvectorj}[4] % {coordinate_frame}{letter}{label}{index}
+% generate notation for a component of a general vector. Math mode only.
+    {{}^{#1} {\bf #2}_{#3,#4}}
+
+\newcommand{\gunit}[3] % {coordinate_frame}{symbol}{label}
+% generate notation for a general unit vector. Math mode only.
+    {{}^{#1} {\hat {\bf #2}}_{#3}}
+
+\newcommand{\inertia}[2] % {coordinate_frame}{label}
+% generate notation for an object inertia. Math mode only.
+    {{}^{#1}{\bf I}_{#2}}
+
+\newcommand{\inertiaref}[3] % {coordinate_frame}{inertia-ref-frame}{label}
+% generate notation for an object inertia. Math mode only.
+    {{}^{#1}{\bf I}^{#2}_{3}}
+
+\newcommand{\invrskin}[2] % {manipulator}{input}
+% generate syntax for the inverse kinematics function for a manipulator
+    {\lambda _{#1}^{-1}({#2})}
+
+\newcommand{\jacobian}[2] % {coordinate_frame}{vel_frame; label}
+% generate notation for a Jacobian. Math mode only.
+    {{}^{#1}{\bf J}_{#2}}
+
+\newcommand{\joint}[1] % {manipulator}
+% generate notation for a joint position vector.
+    {\mbox{{\boldmath $\theta$}$_{#1}$}}
+
+\newcommand{\jointrate}[1] % {manip_label}
+% generate notation for a joint rate.
+    {\mbox{${\bf \dot{\mbox{\boldmath $\theta$}}}_{#1}$}}
+
+\newcommand{\jointtorque}[1] % {manip_label}
+% generate notation for a joint torque. Math mode only.
+    {\mbox{{\boldmath $\tau$}$_{#1}$}}
+
+\newcommand{\magnitude}[1] % {item}
+% generate notation for the magnitude of item. Math mode only.
+    {\|{#1}\|}
+
+\newcommand{\mass}[2] % {coordinate_frame}{label}
+% generate notation for an object mass tuple, including total mass, center of
+% mass, inertia. Math mode only.
+    {{}^{#1}{\bf M}_{#2}}
+
+\newcommand{\quaternion}[2] % {coordinate_frame}{object_frame}
+% generate notation for a quaternion. Math mode only.
+    {{}^{#1}{\bf Q}_{#2}}
+
+\newcommand{\quatrate}[2] % {coordinate_frame}{object_frame}
+% generate notation for a quaternion time derivative. Math mode only.
+    {{}^{#1}{\bf \dot{Q}} _{#2}}
+
+\newcommand{\refframe}[1] %{frame}
+% generate notation for a frame name, in plain text mode.
+    {{\it #1}}
+
+\newcommand{\rotation}[2] % {reference_frame}{object_frame}
+% generate notation for a generic rotation. Math mode only.
+    {{}^{#1}{\bf R}_{#2}}
+
+\newcommand{\rotvect}[2] % {coordinate_frame}{label}
+% generate notation for a rotation vector.
+    {\mbox{$^{#1}${\boldmath $\theta$}$_{#2}$}}
+
+\newcommand{\rotvectrate}[2] % {coordinate_frame}{label}
+% generate notation for time derivative of a rotation vector.
+    {\mbox{$^{#1}${\boldmath $\dot\theta$}$_{#2}$}}
+
+\newcommand{\rotvel}[2] % {coordinate_frame}{vel_frame; label}
+% generate notation for a rotation velocity.
+    {\mbox{$^{#1}${\boldmath $\omega$}$_{#2}$}}
+
+\newcommand{\rotvelj}[3] % {coordinate_frame}{vel_frame; label}{index}
+% generate notation for a component of a rotation velocity.
+    {\mbox{$^{#1}${\boldmath $\omega$}$_{#2,#3}$}}
+
+\newcommand{\tablehead}[1] % {text}
+% table header style
+    {{\bf #1}}
+    
+\newcommand{\transform}[2] % {coordinate_frame}{object_frame}
+% generate notation for a frame transform or object pose. Math mode only.
+    {{}^{#1}{\bf T}_{#2}}
+
+\newcommand{\transformsplit}[2] % {coordinate_frame}{object_frame}
+% generate notation for a frame transform or object pose split into rotation and
+% translation components. Math mode only.
+    {\{\translation{#1}{#2} ; \rotation{#1}{#2} \}}
+
+\newcommand{\transformrate}[2] % {coordinate_frame}{object_frame}
+% generate notation for a frame transform rate. Math mode only.
+    {{}^{#1}{\bf \dot{T} }_{#2}}
+
+\newcommand{\translation}[2] % {coordinate_frame}{object}
+% generate notation for a Cartesian translation (3 dimensional). Math mode only.
+    {{}^{#1}{\bf r}_{#2}}
+
+\newcommand{\tranrate}[2] % {coordinate_frame}{object}
+% generate notation for a Cartesian translation rate (3 dimensional). Math mode only.
+    {{}^{#1}{ \bf \dot{r} }_{#2}}
+
+\newcommand{\tranvel}[2] % {coordinate_frame}{object}
+% generate notation for a translation velocity (compare to translation rate). Math mode only.
+    {{}^{#1} {\bf v}_{#2}}
+
+\newcommand{\tranvelref}[3] % {coordinate_frame}{reference_frame}{label}
+% generate notation for a translation velocity with explicit velocity ref frame. Math mode only.
+    {{}^{#1} {\bf v}^{#2}_{#3}}
+
+\newcommand{\trsfvel}[2] % {new_vel_frame}{old_vel_frame; label}
+% generate notation for a Cartesian velocity transform operator. Math mode only.
+    {{}^{#1}{\bf T_{v:}}_{#2}}
+
+\newcommand{\trsfwrench}[2] % {old_wrench_frame}{new_wrench_frame}
+% generate notation for a Cartesian wrench transform operator. Math mode only.
+    {{}^{#1}{\bf T_{w:}}_{#2}}
+
+\newcommand{\torque}[2] % {coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian torque. Math mode only.
+    {\mbox{$^{#1}${\boldmath $\tau$}$_{#2}$}}
+
+\newcommand{\torqueref}[3] % {coordinate_frame}{reference_frame}{wrench_frame; label}
+% generate notation for a Cartesian torque. Math mode only.
+    {\mbox{$^{#1}${\boldmath $\tau$}$^{#2}_{#3}$}}
+
+\newcommand{\unit}[2] % {coordinate_frame}{label}
+% generate notation for a unit vector. Math mode only.
+    {{}^{#1} {\hat {\bf n}}_{#2}}
+
+\newcommand{\unitj}[3] % {coordinate_frame}{label}{index}
+% generate notation for a component of a unit vector. Math mode only.
+    {{}^{#1} {\hat {\bf n}}_{#2,#3}}
+
+\newcommand{\unitrate}[2] % {coordinate_frame}{label}
+% generate notation for the time derivative of a unit vector. Math mode only.
+    {{}^{#1} \dot{\hat {\bf n}}_{#2}}
+
+\newcommand{\unitratej}[3] % {coordinate_frame}{label}{index}
+% generate notation for a component of the time derivative of a unit vector. Math mode only.
+    {{}^{#1} \dot{\hat {\bf n}}_{#2,#3}}
+
+\newcommand{\wrench}[2] % {coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian wrench. Math mode only.
+    {{}^{#1}{\bf w}_{#2}}
+
+\newcommand{\wrenchref}[3] % {coordinate_frame}{reference_frame}{wrench_frame; label}
+% generate notation for a Cartesian wrench with explicit reference frame. Math mode only.
+    {{}^{#1}{\bf w}^{#2}_{#3}}
+
+\newcommand{\wrenchofs}[3] % {s/z}{coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian wrench as a function of s (frequency domain). Math mode only.
+    {{}^{#2}{\bf W}(#1)_{#3}}
+
+\newcommand{\wrenchofsj}[4] % {s/z}{coordinate_frame}{wrench_frame; label}{index}
+% generate notation for a Cartesian wrench element as a function of s (frequency domain). Math mode only.
+    {{}^{#2}W(#1)_{#3,#4}}
+
+\newcommand{\wrenchoft}[3] % {time}{coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian wrench as a function of time. Math mode only.
+    {{}^{#2}{\bf w}(#1)_{#3}}
+
+\newcommand{\wrenchoftj}[4] % {time}{coordinate_frame}{wrench_frame; label}{index}
+% generate notation for a Cartesian wrench element as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}w(#1)_{#3,#4}}
+
+\newcommand{\wrenchrateoft}[3] % {time}{coordinate_frame}{wrench_frame; label}
+% generate notation for a Cartesian wrench rate as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}{\bf \dot{w}}(#1)_{#3}}
+
+\newcommand{\wrenchrateoftj}[4] % {time}{coordinate_frame}{wrench_frame; label}{index}
+% generate notation for a Cartesian wrench rate element as a function of time. Math mode only.
+% time should be t for continuous time, n or n-i for discrete time.
+    {{}^{#2}\dot{w}(#1)_{#3,#4}}
+
+% end of file

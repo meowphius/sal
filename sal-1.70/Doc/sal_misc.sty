@@ -1,0 +1,54 @@
+% miscellaneous useful macros
+
+\newcommand\button[1]
+% show text as a button
+    {<#1>}
+
+\newcommand\key[1]
+% show text as a key
+    {<#1>}
+
+\newcommand\note[1]
+    {{\it #1}}
+
+\makeatletter
+
+% Basic design of these macros: need to change the catcodes before the
+% parameters are read. Therefore the parameter is specified in a
+% lower-level macro, which is parsed after the catcode is changed. The
+% space after \@salbegincatcodes is necessary; it forces the break in
+% parsing. 
+
+% I'm not clear how to set the catcode for `\ or`\#; use \dlcode or \dlfile,
+% or \verb, for names containing those.
+
+% These macros don't work in section headings or description lists;
+% use \dlfile, \dlcode for those
+
+\def\@salbegincatcodes{\begingroup\catcode`\_=12\catcode`\~=12\catcode`\|=12}
+
+%\file{filename} % show text as file path
+\def\file{\@salbegincatcodes \@file}
+\def\@file#1{\texttt{#1}\endgroup}
+
+%\code{text} % show text as source code
+\def\code{\@salbegincatcodes \@code}
+\def\@code#1{\texttt{#1}\endgroup}
+
+%\menu{text} % show text as menu path
+\def\menu{\@salbegincatcodes \@menu}
+\def\@menu#1{\texttt{#1}\endgroup}
+
+\makeatother
+
+% Code and file markup for use in description list and section
+% headings. Based on url package; sal_misc isn't up to this yet.
+\newcommand\dlcode % {text}
+% show text as source code; allow \, _ without escapes.
+    {\begingroup \urlstyle{tt}\Url}
+
+\newcommand\dlfile % {text}
+% show text as source code; allow \, _ without escapes.
+    {\begingroup \urlstyle{tt}\Url}
+
+% end of file

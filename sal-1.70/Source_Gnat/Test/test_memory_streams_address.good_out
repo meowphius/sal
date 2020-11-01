@@ -1,0 +1,15 @@
+testing SAL.Memory_Streams.Address
+Raw_Memory => ABCDEFGH
+read => 
+"AB" "CD" "EF" "GH" 
+
+Raw_Memory => IJKLMNO
+Length =>  7
+Read => "IJKLMNO" 
+
+Raw_Memory => IJKLMNO
+Length =>  7
+Read => "IJKLMNO" 
+
+done
+

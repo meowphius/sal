@@ -1,0 +1,68 @@
+/* Derivations for spacecraft_math.tex: eqn:quat_times_quat_vs, eqn:quat_times_vect_vs */
+linel : 120$
+
+load ("vect");
+/* defines ~ as vector cross product */
+
+/* eqn:quat_times_quat_vs */
+quat_times_quat_vs (Q1, Q2) :=
+[Q1[2] * Q2[1] + Q2[2] * Q1[1] + Q1[1] ~ Q2[1], Q1[2]*Q2[2] - Q1[1].Q2[1]]$
+
+Qa : [[Q_ax, Q_ay, Q_az], Q_as];
+Qb : [[Q_bx, Q_by, Q_bz], Q_bs];
+qa_qb_vs_1 : quat_times_quat_vs (Qa, Qb);
+qa_qb_vs_2 : express (qa_qb_vs_1);
+
+/* eqn:quat_times_quat, in vector, scalar form */
+quat_times_quat (Qa, Qb) :=
+  [[ Qa[1][2]*Qb[1][3] - Qa[1][3]*Qb[1][2] + Qa[2]*Qb[1][1] + Qa[1][1]*Qb[2],
+   - Qa[1][1]*Qb[1][3] + Qa[2]*Qb[1][2] + Qa[1][3]*Qb[1][1] + Qa[1][2]*Qb[2],
+     Qa[2]*Qb[1][3] + Qa[1][1]*Qb[1][2] - Qa[1][2]*Qb[1][1] + Qa[1][3]*Qb[2]],
+   - Qa[1][3]*Qb[1][3] - Qa[1][2]*Qb[1][2] - Qa[1][1]*Qb[1][1] + Qa[2]*Qb[2]]$
+
+qa_qb_def : quat_times_quat (Qa, Qb);
+
+is (qa_qb_def = qa_qb_vs_2);
+
+
+/* now do quat times vector */
+EXPANDALL : True;
+quat_times_vect_vs (Q, V) :=
+vectorsimp (quat_times_quat_vs (quat_times_quat_vs (Q, [V, 0]), [-Q[1], Q[2]])[1])$
+
+r1 : [r_1x, r_1y, r_1z];
+
+qv_vs_1 : quat_times_vect_vs (Qb, r1);
+qv_vs_2 : expand (express (qv_vs_1));
+qv_vs_3 : expand (subst (Q_bs^2 = 1 - Q_bx^2 - Q_by^2 - Q_bz^2, qv_vs_2));
+
+/* eqn:quat_times_vect_active in vector, scalar form */
+quat_times_vect_active (Q, V) :=
+block
+  (local (a),
+   a : [Q[1][2] * V[3] - Q[1][3] * V[2], Q[1][3] * V[1] - Q[1][1] * V[3], Q[1][1] * V[2] - Q[1][2] * V[1]],
+   expand
+     ([V[1] + 2 * (Q[2] * a[1] + Q[1][2] * a[3] - Q[1][3] * a[2]),
+       V[2] + 2 * (Q[2] * a[2] + Q[1][3] * a[1] - Q[1][1] * a[3]),
+       V[3] + 2 * (Q[2] * a[3] + Q[1][1] * a[2] - Q[1][2] * a[1])]))$
+
+qv_def : quat_times_vect_active (Qb, r1);
+
+is (qv_vs_3 = qv_def);
+
+/* compare to eqn:angle_axis_active */
+DECLARE (r, NONSCALAR)$
+DECLARE (n, NONSCALAR)$
+DECLARE (theta, SCALAR)$
+
+qv_aavs_1 : quat_times_vect_vs ([n * sin (theta/2), cos (theta/2)], r);
+subst (n.n = 1, %);
+trigreduce(%);
+qv_aavs_2 : expand (%);
+
+/* eqn:angle_axis_active */
+aa_def : expand (r * cos(theta) - r ~ n * sin(theta) + n * r . n *(1 - cos(theta)));
+
+is (aa_def = qv_aavs_2);
+
+/* end of file */

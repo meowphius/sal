@@ -1,0 +1,34 @@
+/* Derivations for spacecraft_math.tex eqn:quat_times_vect comparison to Kane */
+linel : 120$
+
+load ("vect");
+/* defines ~ as vector cross product */
+
+EXPANDALL : True;
+r : [r_x, r_y, r_z];
+Q : [[Q_x, Q_y, Q_z], Q_s];
+
+/* Kane 1.3(21) */
+quat_times_vect_kane (Q, r) :=
+r + 2 *(Q[2] * Q[1] ~ r + Q[1] ~ (Q[1] ~ r));
+
+qv_kane_1 : quat_times_vect_kane (Q, r);
+vectorsimp(%);
+express (%);
+qv_kane_2 : expand (%);
+
+/* eqn:quat_times_vect_active in vector, scalar form */
+quat_times_vect_active (Q, V) :=
+block
+  (local (a),
+   a : [Q[1][2] * V[3] - Q[1][3] * V[2], Q[1][3] * V[1] - Q[1][1] * V[3], Q[1][1] * V[2] - Q[1][2] * V[1]],
+   expand
+     ([V[1] + 2 * (Q[2] * a[1] + Q[1][2] * a[3] - Q[1][3] * a[2]),
+       V[2] + 2 * (Q[2] * a[2] + Q[1][3] * a[1] - Q[1][1] * a[3]),
+       V[3] + 2 * (Q[2] * a[3] + Q[1][1] * a[2] - Q[1][2] * a[1])]))$
+
+qv_def : quat_times_vect_active (Q, r);
+
+is (qv_def = qv_kane_2);
+
+/* end of file */

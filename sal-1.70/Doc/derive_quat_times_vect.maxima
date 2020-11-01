@@ -1,0 +1,54 @@
+/* Derivations for spacecraft_math.tex eqn:quat_times_vect */
+linel : 120$
+FILE_SEARCH_MAXIMA : append (["./###.{maxima}"], FILE_SEARCH_MAXIMA)$
+
+batch ("math_util");
+
+r : [r_x, r_y, r_z]$
+n : [n_x, n_y, n_z]$
+
+/* eqn:angle_axis_to_quat_active */
+Q_x : sin (theta/2) * n_x$
+Q_y : sin (theta/2) * n_y$
+Q_z : sin (theta/2) * n_z$
+Q_s : cos (theta/2)$ 
+
+/* eqn:quat_times_vect */
+quat_times_vect (Q,r) :=
+   block
+   ([a],
+    a : [Q[2] * r[3] - Q[3] * r[2], Q[3] * r[1] - Q[1] * r[3], Q[1] * r[2] - Q[2] * r[1]],
+    expand
+      ([r[1] + 2 * (Q[4] * a[1] + Q[2] * a[3] - Q[3] * a[2]),
+       r[2] + 2 * (Q[4] * a[2] + Q[3] * a[1] - Q[1] * a[3]),
+       r[3] + 2 * (Q[4] * a[3] + Q[1] * a[2] - Q[2] * a[1])]))$
+
+r_rotated : expand (quat_times_vect ([Q_x, Q_y, Q_z, Q_s], [r_x, r_y, r_z]));
+
+/* apply half-angle trig identities */
+/* sin(theta) = 2 cos(theta/2) sin(theta/2) */
+r_rotated_1 : ratsubst(sin(theta)/2, cos(theta/2)*sin(theta/2), r_rotated);
+
+/* sin(theta/2) = sqrt ((1 - cos(theta))/2) */
+r_rotated_2 : ratsubst((1 - cos(theta))/2, sin(theta/2)^2, r_rotated_1);
+ 
+/* collect terms */
+r_rotated_3 : trigsimp( r_rotated_2);
+
+/* Selectively apply mag(n) = 1 */
+r_rotated_x : ratsubst(1 - n_x^2, n_z^2 + n_y^2, r_rotated_3[1]);
+r_rotated_y : ratsubst(1 - n_y^2, n_z^2 + n_x^2, r_rotated_3[2]);
+r_rotated_z : ratsubst(1 - n_z^2, n_x^2 + n_y^2, r_rotated_3[3]);
+r_rotated_4 : [r_rotated_x, r_rotated_y, r_rotated_z]$
+
+/* now expand eqn:angle_axis_active to show it is the same */
+
+vect_rot : trigsimp (r * cos (theta) - cross (r, n) * sin (theta) + n * r . n * (1 - cos (theta)));
+
+/* "=" can't cope with trig, so substitute symbols */
+r_rotated_5 : subst ([sin(theta) = st, cos(theta)=ct], r_rotated_4);
+vect_rot_1 : subst ([sin(theta) = st, cos(theta)=ct], vect_rot);
+
+is (vect_rot_1 = r_rotated_5);
+
+/* end of file */

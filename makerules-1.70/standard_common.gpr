@@ -1,0 +1,88 @@
+-- Standard settings for all of Stephe's Ada projects.
+project Standard_Common is
+  for Source_Dirs use ();
+
+  type GNAT_Version_Type is ("5.02a1", "5.02a", "5.01a", "3.16a1", "3.15p");
+
+  GNAT_Version : GNAT_Version_Type := External ("GNAT_VERSION");
+
+  type OS_Version_Type is ("Windows_XP", "Windows_98", "Windows_2000", "Lynx_4.0");
+
+  OS_Version : OS_Version_Type := External ("OS_VERSION");
+
+  package Compiler is
+     System_Case_Style_Checks := "n";
+     Space_Style_Checks       := "t";
+     Base_Style_Checks        := "-gnaty3abefhiklM120pr";
+     Style_Checks             := Base_Style_Checks & System_Case_Style_Checks & Space_Style_Checks;
+     Non_Spacing_Style_Checks := Base_Style_Checks & System_Case_Style_Checks;
+
+     --  For GNAT 3.15, don't warn about elaboration order (gnatwL,
+     --  off by default in 3.16).
+     --
+     --  -gnatVa causes some inline procedures to be non-inlineable;
+     --  suppress that warning with -gnatwP.
+     Base_Debug_Switches :=
+       --  Switches we always use
+       ("-g",
+        "-O0",
+        "-gnatf",
+        "-gnato",
+        "-gnatwa",
+        "-gnatwL",
+        "-gnatVa",
+        "-gnatwP",
+        "-fstack-check");
+     Debug_Switches      := Base_Debug_Switches &
+       --  Switches we need to suppress sometimes
+       ("-gnata",
+        "-gnatwe");
+
+     Release_Switches := ("-g", "-O3", "-gnatn", "-gnatf", "-gnatwa", "-gnatwL");
+
+     --  The project file syntax does not let us set a variable in a
+     --  case statement. So we set the Default_Switches attribute to
+     --  contain the version-dependent switches. This is then
+     --  accessible in child project files via 'Default_Switches.
+     case GNAT_Version is
+     when "5.01a" =>
+        --  WORKAROUND: GNAT 5.01a optimization bug;
+        --  -fno-strict-aliasing avoids it. However,
+        --  -fno-strict-aliasing is not defined in earlier GNAT
+        --  versions. This switch is only needed for release builds
+        --  (when optimization is enabled), but does not hurt in
+        --  debug/test builds. Specifying it in both avoids splitting
+        --  this file in two.
+        for Default_Switches ("Ada") use ("-fno-strict-aliasing");
+
+     when "5.02a1" | "5.02a" | "3.16a1" | "3.15p" =>
+
+     end case;
+
+  end Compiler;
+
+  --  In project files, normally use this:
+  --  package Compiler is
+  --  for Default_Switches ("Ada") use Standard_Common.Compiler'Default_Switches ("Ada") &
+  --     Standard_Common.Compiler.Base_Release_Switches &
+  --     Standard_Common.Compiler.Style_Checks;
+  --  end Compiler;
+
+  package Binder is
+     case OS_Version is
+     when "Windows_98" =>
+
+
+     when "Windows_2000" | "Lynx_4.0" | "Windows_XP" =>
+        for Default_Switches ("Ada") use ("-E");
+     end case;
+
+     Debug_Configuration_Pragmas := "Normalize_Scalars";
+  end Binder;
+
+  --  In project files, normally use this:
+  --  package Binder is
+  --     for Default_Switches ("Ada") use Standard_Common.Binder'Default_Switches ("Ada");
+  --  end Binder;
+
+end Standard_Common;

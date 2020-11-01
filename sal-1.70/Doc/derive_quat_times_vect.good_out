@@ -1,0 +1,173 @@
+GCL (GNU Common Lisp)  Version(2.5.0) Thu Jan 30 02:37:51 CST 2003
+Licensed under GNU Library General Public License
+Contains Enhancements by W. Schelter
+
+Use (help) to get some basic information on how to use GCL.
+Maxima 5.9.0 http://maxima.sourceforge.net
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+This is a development version of Maxima. The function bug_report()
+provides bug reporting information.
+(C1) 		     BATCH(derive_quat_times_vect.maxima)
+
+batching #pc:/Projects/GDS/sal/main/Doc/derive_quat_times_vect.maxima
+(C2) 				  LINEL : 120
+(C3) 			   FILE_SEARCH_MAXIMA : APPEND([./###.{maxima}], FILE_SEARCH_MAXIMA)
+(C4) 						    BATCH(math_util)
+
+batching #pc:/Projects/GDS/sal/main/Doc/math_util.maxima
+(C5) 			      cross(a, b) := [a  b  - a  b , a  b  - a  b , a  b  - a  b ]
+					       2  3    3  2   3	 1    1	 3   1  2    2  1
+(D6) 						   ./math_util.maxima
+(C6) 						  r : [r_x, r_y, r_z]
+(C7) 						  n : [n_x, n_y, n_z]
+							    THETA
+(C8) 						  Q_x : SIN(-----) n_x
+							      2
+							    THETA
+(C9) 						  Q_y : SIN(-----) n_y
+							      2
+							    THETA
+(C10) 						  Q_z : SIN(-----) n_z
+							      2
+							      THETA
+(C11) 						    Q_s : COS(-----)
+								2
+(C12) quat_times_vect(Q, r) := BLOCK([a], a : [Q  r  - Q  r , Q  r  - Q  r , Q  r  - Q  r ], 
+						2  3    3  2   3  1    1  3   1	 2    2	 1
+
+	 EXPAND([2 (- Q  a  + Q  a  + Q  a ) + r , 2 (- Q  a  + Q  a  + Q  a ) + r , 2 (- Q  a  + Q  a  + Q  a ) + r ]))
+		       3  2    2  3    4  1     1	 1  3	 3  1	 4  2	  2	   2  1	   1  2	   4  3	    3
+(C13) 		       r_rotated : EXPAND(quat_times_vect([Q_x, Q_y, Q_z, Q_s], [r_x, r_y, r_z]))
+			2 THETA			    2 THETA	    2	     2 THETA	     2	      2 THETA
+(D13) [2 n_x n_z r_z SIN (-----) + 2 n_x n_y r_y SIN (-----) - 2 n_z  r_x SIN (-----) - 2 n_y  r_x SIN (-----)
+			    2			        2			 2			  2
+
+		 THETA	    THETA		   THETA      THETA
+ + 2 n_y r_z COS(-----) SIN(-----) - 2 n_z r_y COS(-----) SIN(-----) + r_x, 
+		   2	      2			     2	        2
+
+		 2 THETA	 2	  2 THETA	  2	   2 THETA		       2 THETA
+2 n_y n_z r_z SIN (-----) - 2 n_z  r_y SIN (-----) - 2 n_x  r_y SIN (-----) + 2 n_x n_y r_x SIN (-----)
+		     2			      2			       2			   2
+
+		 THETA	    THETA		   THETA      THETA
+ - 2 n_x r_z COS(-----) SIN(-----) + 2 n_z r_x COS(-----) SIN(-----) + r_y, 
+		   2	      2			     2	        2
+
+       2        2 THETA	        2	 2 THETA		     2 THETA			 2 THETA
+- 2 n_y  r_z SIN (-----) - 2 n_x  r_z SIN (-----) + 2 n_y n_z r_y SIN (-----) + 2 n_x n_z r_x SIN (-----)
+		    2			     2				 2			     2
+
+		 THETA	    THETA		   THETA      THETA
+ + 2 n_x r_y COS(-----) SIN(-----) - 2 n_y r_x COS(-----) SIN(-----) + r_z]
+		   2	      2			     2	        2
+						 SIN(THETA)	 THETA	    THETA
+(C14) 			  r_rotated_1 : RATSUBST(----------, COS(-----) SIN(-----), r_rotated)
+						     2		   2	      2
+											  2	   2	      2 THETA
+(D14) [n_y r_z SIN(THETA) - n_z r_y SIN(THETA) + (2 n_x n_z r_z + 2 n_x n_y r_y + (- 2 n_z  - 2 n_y ) r_x) SIN (-----)
+														  2
+
+									     2	      2
+ + r_x, - n_x r_z SIN(THETA) + n_z r_x SIN(THETA) + (2 n_y n_z r_z + (- 2 n_z  - 2 n_x ) r_y + 2 n_x n_y r_x)
+
+    2 THETA							       2        2
+ SIN (-----) + r_y, n_x r_y SIN(THETA) - n_y r_x SIN(THETA) + ((- 2 n_y  - 2 n_x ) r_z + 2 n_y n_z r_y + 2 n_x n_z r_x)
+	2
+
+    2 THETA
+ SIN (-----) + r_z]
+	2
+						   1 - COS(THETA)     2 THETA
+(C15) 			    r_rotated_2 : RATSUBST(--------------, SIN (-----), r_rotated_1)
+							 2		  2
+(D15) [(n_y r_z - n_z r_y) SIN(THETA) + n_x n_z r_z (1 - COS(THETA)) + n_x n_y r_y (1 - COS(THETA))
+
+	   2			   2
+ + r_x (n_z  (COS(THETA) - 1) + n_y  (COS(THETA) - 1) + 1), 
+
+(n_z r_x - n_x r_z) SIN(THETA) + n_y n_z r_z (1 - COS(THETA)) + n_x n_y r_x (1 - COS(THETA))
+
+	   2			   2
+ + r_y (n_z  (COS(THETA) - 1) + n_x  (COS(THETA) - 1) + 1), 
+
+(n_x r_y - n_y r_x) SIN(THETA) + n_y n_z r_y (1 - COS(THETA)) + n_x n_z r_x (1 - COS(THETA))
+
+	   2			   2
+ + r_z (n_y  (COS(THETA) - 1) + n_x  (COS(THETA) - 1) + 1)]
+(C16) 					  r_rotated_3 : TRIGSIMP(r_rotated_2)
+									   2	  2
+(D16) [(n_y r_z - n_z r_y) SIN(THETA) + (- n_x n_z r_z - n_x n_y r_y + (n_z  + n_y ) r_x) COS(THETA) + n_x n_z r_z
+
+		       2      2
+ + n_x n_y r_y + (- n_z  - n_y  + 1) r_x, (n_z r_x - n_x r_z) SIN(THETA)
+
+			2      2						      2	     2
+ + (- n_y n_z r_z + (n_z  + n_x ) r_y - n_x n_y r_x) COS(THETA) + n_y n_z r_z + (- n_z  - n_x  + 1) r_y + n_x n_y r_x, 
+
+				      2	     2							    2	   2
+(n_x r_y - n_y r_x) SIN(THETA) + ((n_y  + n_x ) r_z - n_y n_z r_y - n_x n_z r_x) COS(THETA) + (- n_y  - n_x  + 1) r_z
+
+ + n_y n_z r_y + n_x n_z r_x]
+							    2	  2	 2
+(C17) 			      r_rotated_x : RATSUBST(1 - n_x , n_y  + n_z , r_rotated_3 )
+										       1
+									      2
+(D17) (n_y r_z - n_z r_y) SIN(THETA) + (- n_x n_z r_z - n_x n_y r_y + (1 - n_x ) r_x) COS(THETA) + n_x n_z r_z
+
+														   2
+											        + n_x n_y r_y + n_x  r_x
+							    2	  2	 2
+(C18) 			      r_rotated_y : RATSUBST(1 - n_y , n_x  + n_z , r_rotated_3 )
+										       2
+								2
+(D18) (n_z r_x - n_x r_z) SIN(THETA) + (- n_y n_z r_z + (1 - n_y ) r_y - n_x n_y r_x) COS(THETA) + n_y n_z r_z
+
+												     2
+											        + n_y  r_y + n_x n_y r_x
+							    2	  2	 2
+(C19) 			      r_rotated_z : RATSUBST(1 - n_z , n_y  + n_x , r_rotated_3 )
+										       3
+						2						    2
+(D19) (n_x r_y - n_y r_x) SIN(THETA) + ((1 - n_z ) r_z - n_y n_z r_y - n_x n_z r_x) COS(THETA) + n_z  r_z + n_y n_z r_y
+
+													   + n_x n_z r_x
+(C20) 				 r_rotated_4 : [r_rotated_x, r_rotated_y, r_rotated_z]
+(C21) 	        vect_rot : TRIGSIMP(n (r . n) (1 - COS(THETA)) - cross(r, n) SIN(THETA) + r COS(THETA))
+									       2
+(D21) [(n_y r_z - n_z r_y) SIN(THETA) + (- n_x n_z r_z - n_x n_y r_y + (1 - n_x ) r_x) COS(THETA) + n_x n_z r_z
+
+		    2								     2
+ + n_x n_y r_y + n_x  r_x, (n_z r_x - n_x r_z) SIN(THETA) + (- n_y n_z r_z + (1 - n_y ) r_y - n_x n_y r_x) COS(THETA)
+
+		    2
+ + n_y n_z r_z + n_y  r_y + n_x n_y r_x, (n_x r_y - n_y r_x) SIN(THETA)
+
+	    2						        2
+ + ((1 - n_z ) r_z - n_y n_z r_y - n_x n_z r_x) COS(THETA) + n_z  r_z + n_y n_z r_y + n_x n_z r_x]
+(C22) 			  r_rotated_5 : SUBST([SIN(THETA) = st, COS(THETA) = ct], r_rotated_4)
+									  2
+(D22) [(n_y r_z - n_z r_y) st + ct (- n_x n_z r_z - n_x n_y r_y + (1 - n_x ) r_x) + n_x n_z r_z + n_x n_y r_y
+
+      2								  2					   2
+ + n_x  r_x, (n_z r_x - n_x r_z) st + ct (- n_y n_z r_z + (1 - n_y ) r_y - n_x n_y r_x) + n_y n_z r_z + n_y  r_y
+
+						     2					      2
+ + n_x n_y r_x, (n_x r_y - n_y r_x) st + ct ((1 - n_z ) r_z - n_y n_z r_y - n_x n_z r_x) + n_z  r_z + n_y n_z r_y
+
+ + n_x n_z r_x]
+(C23) 			    vect_rot_1 : SUBST([SIN(THETA) = st, COS(THETA) = ct], vect_rot)
+									  2
+(D23) [(n_y r_z - n_z r_y) st + ct (- n_x n_z r_z - n_x n_y r_y + (1 - n_x ) r_x) + n_x n_z r_z + n_x n_y r_y
+
+      2								  2					   2
+ + n_x  r_x, (n_z r_x - n_x r_z) st + ct (- n_y n_z r_z + (1 - n_y ) r_y - n_x n_y r_x) + n_y n_z r_z + n_y  r_y
+
+						     2					      2
+ + n_x n_y r_x, (n_x r_y - n_y r_x) st + ct ((1 - n_z ) r_z - n_y n_z r_y - n_x n_z r_x) + n_z  r_z + n_y n_z r_y
+
+ + n_x n_z r_x]
+(C24) 					      IS(vect_rot_1 = r_rotated_5)
+(D24) 							  TRUE
+(D25) 					     derive_quat_times_vect.maxima

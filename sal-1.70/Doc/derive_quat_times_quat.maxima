@@ -1,0 +1,44 @@
+/* Derivations for spacecraft_math.tex eqn:quat_times_quat derivation */
+linel : 120$
+FILE_SEARCH_MAXIMA : append (["./###.{maxima}"], FILE_SEARCH_MAXIMA)$
+
+batch ("math_util");
+
+/* eqn:quat_times_vect */
+quat_times_vect (Q,r) :=
+   block
+   ([a],
+    a : [Q[2] * r[3] - Q[3] * r[2], Q[3] * r[1] - Q[1] * r[3], Q[1] * r[2] - Q[2] * r[1]],
+    expand
+      ([r[1] + 2 * (Q[4] * a[1] + Q[2] * a[3] - Q[3] * a[2]),
+       r[2] + 2 * (Q[4] * a[2] + Q[3] * a[1] - Q[1] * a[3]),
+       r[3] + 2 * (Q[4] * a[3] + Q[1] * a[2] - Q[2] * a[1])]))$
+
+/* eqn:quat_times_quat */
+quat_times_quat (Qa, Qb) :=
+  [  Qa[2]*Qb[3] - Qa[3]*Qb[2] + Qa[4]*Qb[1] + Qa[1]*Qb[4],
+   - Qa[1]*Qb[3] + Qa[4]*Qb[2] + Qa[3]*Qb[1] + Qa[2]*Qb[4],
+     Qa[4]*Qb[3] + Qa[1]*Qb[2] - Qa[2]*Qb[1] + Qa[3]*Qb[4],
+   - Qa[3]*Qb[3] - Qa[2]*Qb[2] - Qa[1]*Qb[1] + Qa[4]*Qb[4]]$
+
+r : [r_x, r_y, r_z]$
+
+Qa : [Qa_x, Qa_y, Qa_z, Qa_s]$
+Qb : [Qb_x, Qb_y, Qb_z, Qb_s]$
+
+Qc : quat_times_quat (Qa, Qb)$
+
+Qb_r : quat_times_vect (Qb, r)$
+QaQb_r : expand (quat_times_vect (Qa, Qb_r))$
+
+Qc_r : expand (quat_times_vect (Qc, r))$
+
+/* Eliminate Qb_s^2, Qa_s^2 from both, to get the same form. */
+QaQb_r_1 : expand (ratsubst (1 - Qb_x^2 - Qb_y^2 - Qb_z^2, Qb_s^2, QaQb_r))$
+QaQb_r_1 : expand (ratsubst (1 - Qa_x^2 - Qa_y^2 - Qa_z^2, Qa_s^2, QaQb_r_1))$
+Qc_r_1 : expand (ratsubst (1 - Qb_x^2 - Qb_y^2 - Qb_z^2, Qb_s^2, Qc_r))$
+Qc_r_1 : expand (ratsubst (1 - Qa_x^2 - Qa_y^2 - Qa_z^2, Qa_s^2, Qc_r_1))$
+
+is (QaQb_r_1 = Qc_r_1);
+
+/* end of file */

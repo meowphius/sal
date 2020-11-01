@@ -1,0 +1,12 @@
+applications:
+
+star catalog
+    many more lookups than insertions
+    real-time range lookups
+    uses sal.poly.unbounded_arrays for fast indexing, sal.gen.alg.find_binary find_less_equal, find_greater_equal
+
+vcr
+    non-real-time
+    file stored in sorted order, processed in order
+    occasional adds, deletes, order changes
+    uses sal.poly.lists.double, sal.gen.alg.find_linear find_equal_ascending
